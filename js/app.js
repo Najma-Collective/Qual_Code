@@ -5,6 +5,10 @@
 const App = {
   state: null,
   snackbarTimeout: null,
+  snapshotMap: {
+    bwia: 'What are your guys thoughts on BWIA West Indies Airways when it was in service_ _ r_AskTheCaribbean.html',
+    'us-influence': 'How do you feel about the theories regarding US influence in the Caribbean_ _ r_AskTheCaribbean.html'
+  },
 
   /**
    * Initialise the application
@@ -104,6 +108,7 @@ const App = {
     this.setupChatInput();
     this.setupDrawer();
     this.setupToolbarActions();
+    this.setupThreadViewControls();
 
     // 4. Set up timer
     if (!isResume) {
@@ -161,6 +166,60 @@ const App = {
 
     // 8. Start AI heartbeat for agentic check-ins during pre-coding/coding
     AI.startHeartbeat();
+  },
+
+  setupThreadViewControls() {
+    var modeSelect = document.getElementById('thread-view-mode');
+    var snapshotSelect = document.getElementById('snapshot-select');
+    var savedMode = this.state.threadViewMode || 'snapshot';
+    var savedSnapshot = this.state.snapshotSource || (this.state.threadId === 'thread-02' ? 'bwia' : 'us-influence');
+    this.state.threadViewMode = savedMode;
+    this.state.snapshotSource = savedSnapshot;
+
+    if (modeSelect) {
+      modeSelect.value = savedMode;
+      modeSelect.onchange = () => {
+        this.state.threadViewMode = modeSelect.value;
+        Storage.save(this.state);
+        this.updateThreadViewMode();
+      };
+    }
+
+    if (snapshotSelect) {
+      snapshotSelect.value = savedSnapshot;
+      snapshotSelect.onchange = () => {
+        this.state.snapshotSource = snapshotSelect.value;
+        Storage.save(this.state);
+        this.loadSnapshotFrame();
+      };
+    }
+
+    this.updateThreadViewMode();
+  },
+
+  updateThreadViewMode() {
+    var structured = document.getElementById('thread-content');
+    var snapshot = document.getElementById('snapshot-browser');
+    var mode = this.state.threadViewMode || 'structured';
+
+    if (structured) structured.style.display = mode === 'snapshot' ? 'none' : 'block';
+    if (snapshot) snapshot.style.display = mode === 'snapshot' ? 'block' : 'none';
+
+    if (mode === 'snapshot') {
+      this.loadSnapshotFrame();
+    }
+  },
+
+  loadSnapshotFrame() {
+    var frame = document.getElementById('snapshot-frame');
+    if (!frame) return;
+    var source = this.state.snapshotSource || 'bwia';
+    var path = this.snapshotMap[source];
+    if (!path) return;
+
+    if (frame.getAttribute('src') !== path) {
+      frame.setAttribute('src', path);
+    }
   },
 
   /**
