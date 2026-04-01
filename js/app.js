@@ -82,12 +82,6 @@ const App = {
         return;
       }
 
-      // Save API key if provided
-      var apiKeyInput = document.getElementById('api-key-input');
-      if (apiKeyInput && apiKeyInput.value.trim()) {
-        AI.saveApiKey(apiKeyInput.value.trim());
-      }
-
       self.state.studentId = studentId;
       self.state.documentUrl = docUrl;
       self.state.documentId = docId;
@@ -197,9 +191,9 @@ const App = {
     var docId = this.state.documentId;
     if (!docId) return;
 
-    var apiKey = AI.apiKey;
+    var apiKey = AI.getApiKey();
     if (!apiKey) {
-      console.log('No API key available for Google Drive export.');
+      console.log('No API key available for Google Drive export. Check config.js.');
       return;
     }
 

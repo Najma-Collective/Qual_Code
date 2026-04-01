@@ -3,7 +3,6 @@
  */
 
 var AI = {
-  apiKey: '',
   selectedModel: 'gemini-2.0-flash',
   availableModels: [],
   retryDelay: 1000,
@@ -12,30 +11,18 @@ var AI = {
   heartbeatIntervalMs: 60000, // 1 minute
 
   /**
-   * Load API key from localStorage
+   * Get the API key from the embedded config
    */
-  loadApiKey: function() {
-    var saved = localStorage.getItem('qualcode_api_key');
-    if (saved) {
-      this.apiKey = saved;
-      return true;
-    }
-    return false;
-  },
-
-  /**
-   * Save API key to localStorage
-   */
-  saveApiKey: function(key) {
-    this.apiKey = key;
-    localStorage.setItem('qualcode_api_key', key);
+  getApiKey: function() {
+    return (typeof CONFIG !== 'undefined' && CONFIG.API_KEY && CONFIG.API_KEY !== 'YOUR_API_KEY_HERE')
+      ? CONFIG.API_KEY : '';
   },
 
   /**
    * Check if API key is set
    */
   hasApiKey: function() {
-    return this.apiKey && this.apiKey.length > 0;
+    return this.getApiKey().length > 0;
   },
 
   /**
@@ -45,7 +32,7 @@ var AI = {
     if (!this.hasApiKey()) return;
     var self = this;
 
-    fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + this.apiKey)
+    fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + this.getApiKey())
       .then(function(response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.json();
@@ -212,7 +199,7 @@ var AI = {
     var maxRetries = 3;
     var self = this;
 
-    var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + this.selectedModel + ':generateContent?key=' + this.apiKey;
+    var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + this.selectedModel + ':generateContent?key=' + this.getApiKey();
 
     var cleanedHistory = conversationHistory.map(function(msg) {
       return { role: msg.role, parts: msg.parts };

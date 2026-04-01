@@ -31,18 +31,6 @@
         </div>
       </div>
 
-      <div class="mdc-text-field mdc-text-field--outlined setup-field" id="api-key-field">
-        <input type="password" id="api-key-input" class="mdc-text-field__input" autocomplete="off" aria-label="Gemini API Key">
-        <div class="mdc-notched-outline">
-          <div class="mdc-notched-outline__leading"></div>
-          <div class="mdc-notched-outline__notch">
-            <label class="mdc-floating-label" for="api-key-input">Gemini API Key</label>
-          </div>
-          <div class="mdc-notched-outline__trailing"></div>
-        </div>
-      </div>
-      <p class="setup-card__hint">The AI key is saved on your device only, not in the code. Enable the Google Drive API in the same project for document access.</p>
-
       <div class="mdc-text-field mdc-text-field--outlined setup-field" id="doc-url-field">
         <input type="url" id="doc-url-input" class="mdc-text-field__input" autocomplete="off" aria-label="Google Doc URL">
         <div class="mdc-notched-outline">
@@ -309,6 +297,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
+  <script src="config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/timer.js"></script>
   <script src="js/ai.js"></script>
@@ -374,11 +363,6 @@
         });
       }
 
-      // Pre-fill API key if previously saved
-      if (AI.loadApiKey()) {
-        var apiInput = document.getElementById('api-key-input');
-        if (apiInput) apiInput.value = AI.apiKey;
-      }
     });
 
     // Sync codes list to desktop panel
