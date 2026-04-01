@@ -61,15 +61,21 @@ const App = {
     document.getElementById('setup-screen').classList.add('active');
     document.getElementById('main-app').classList.remove('active');
 
-    document.getElementById('btn-start').onclick = () => {
+    var self = this;
+    document.getElementById('btn-start').onclick = function() {
       var studentId = document.getElementById('student-id-input').value.trim();
       if (!studentId) {
-        this.showSnackbar('Please enter your Student ID.');
+        self.showSnackbar('Please enter your Student ID.');
         return;
       }
-      this.state.studentId = studentId;
-      Storage.save(this.state);
-      this.startSession(false);
+      // Save API key if provided
+      var apiKeyInput = document.getElementById('api-key-input');
+      if (apiKeyInput && apiKeyInput.value.trim()) {
+        AI.saveApiKey(apiKeyInput.value.trim());
+      }
+      self.state.studentId = studentId;
+      Storage.save(self.state);
+      self.startSession(false);
     };
   },
 
@@ -195,7 +201,7 @@ const App = {
     if (!this.state.threadTitle) {
       this.state.threadTitle = 'What are your guys thoughts on BWIA West Indies Airways when it was in service?';
       this.state.subreddit = 'r/AskTheCaribbean';
-      this.state.researchQuestion = 'How do members of r/AskTheCaribbean construct collective memory and post-colonial identity through nostalgic discourse about BWIA West Indies Airways?';
+      this.state.researchQuestion = 'How do Reddit members signal Caribbean identity?';
       this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) nostalgia as a vehicle for collective Caribbean identity construction; (2) the tension between colonial naming and post-independence identity; (3) how humour and affectionate nicknames function as in-group markers; (4) sensory memory as anchors for cultural belonging; (5) the distinction between institutional critique and personal affection.';
       Storage.save(this.state);
     }
