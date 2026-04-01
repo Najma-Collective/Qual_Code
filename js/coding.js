@@ -39,7 +39,6 @@ const Coding = {
    */
   init() {
     this.setupAnnotationToolbar();
-    this.setupCodeModal();
     this.renderCodesList();
   },
 

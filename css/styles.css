@@ -397,6 +397,12 @@ html, body {
   line-height: 1.6;
 }
 
+.reddit-comment.reply {
+  margin-left: 20px;
+  border-left-color: var(--primary);
+  border-left-width: 2px;
+}
+
 /* --- Chat Pane --- */
 .chat-pane {
   flex: 1;

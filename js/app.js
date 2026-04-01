@@ -193,55 +193,75 @@ const App = {
 
     // Set default metadata if not already set
     if (!this.state.threadTitle) {
-      this.state.threadTitle = "What's your favourite Caribbean dish?";
-      this.state.subreddit = 'r/AskCaribbean';
-      this.state.researchQuestion = 'How do participants in r/AskCaribbean construct and negotiate Caribbean culinary identity through food discourse?';
-      this.state.aiGuidance = 'Focus assessment on whether the student identifies cultural identity markers in food descriptions, recognises in-group/out-group dynamics in recipe attribution, and connects food practices to broader Caribbean cultural narratives.';
+      this.state.threadTitle = 'What are your guys thoughts on BWIA West Indies Airways when it was in service?';
+      this.state.subreddit = 'r/AskTheCaribbean';
+      this.state.researchQuestion = 'How do members of r/AskTheCaribbean construct collective memory and post-colonial identity through nostalgic discourse about BWIA West Indies Airways?';
+      this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) nostalgia as a vehicle for collective Caribbean identity construction; (2) the tension between colonial naming and post-independence identity; (3) how humour and affectionate nicknames function as in-group markers; (4) sensory memory as anchors for cultural belonging; (5) the distinction between institutional critique and personal affection.';
       Storage.save(this.state);
     }
 
     threadContent.innerHTML =
       '<div class="reddit-thread">' +
         '<div class="reddit-header">' +
-          '<span class="reddit-sub">' + this.escapeHtml(this.state.subreddit) + '</span>' +
-          '<h2 class="reddit-title">' + this.escapeHtml(this.state.threadTitle) + '</h2>' +
-          '<span class="reddit-meta">Posted by u/caribbeanfoodie42 &middot; 3 months ago</span>' +
+          '<span class="reddit-sub">r/AskTheCaribbean</span>' +
+          '<h2 class="reddit-title">What are your guys thoughts on BWIA West Indies Airways when it was in service?</h2>' +
+          '<span class="reddit-meta">Posted by u/Pretty_Aside_7674 &middot; 15 days ago</span>' +
         '</div>' +
         '<div class="reddit-post">' +
-          '<p>Hey everyone! I\'m curious about what dishes make you feel most connected to your Caribbean identity. What\'s the one dish that screams "home" for you?</p>' +
+          '<p>What are your guys thoughts on BWIA West Indies Airways when it was in service?</p>' +
         '</div>' +
         '<div class="reddit-comments">' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/trini_pride</span>' +
-            '<p>Pelau, no question. My grandmother used to make it every Sunday. The way the rice gets that brown colour from the caramelised sugar... there\'s nothing like it. I always feel proud when someone mentions our pelau because it\'s uniquely ours.</p>' +
+            '<span class="reddit-author">u/ma70_</span>' +
+            '<p>I loved their last livery. And the nickname Bwee</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/jamaicanroots</span>' +
-            '<p>For me it\'s ackee and saltfish. My mother learned it from her mother, who learned from her grandmother. My grandmother\'s recipe, passed down from slavery days, uses scotch bonnet in a way that nobody else does. When I cook it abroad, the smell takes me straight back to Kingston.</p>' +
+            '<span class="reddit-author">u/Infamous_Copy_3659</span>' +
+            '<p>I always knew that I was on the way home when I boarded and ordered a Solo Apple J. They also had red Solo if I recall correctly. And they made good spicy bloody marys.</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/Carribeantimberwolf</span>' +
+            '<p>The brown stew chicken sandwich was clutch</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/haitiankreyol</span>' +
-            '<p>Griot with pikliz. Every celebration, every family gathering. You can\'t be Haitian without griot. When I moved to Montreal, the first thing I did was find a Haitian restaurant. The food is how we stay connected. Li nan san nou \u2014 it\'s in our blood.</p>' +
+            '<span class="reddit-author">u/Kelvin62</span>' +
+            '<p>But Will It Arrive?</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/ProfessionSoft7944</span>' +
+            '<p>Better Walk If Able</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/Infamous_Copy_3659</span>' +
+            '<p>I remember this one</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/disgruntledmarmoset</span>' +
+            '<p>Sounds like Bahamasair lol</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/Lazy-Community-1288</span>' +
+            '<p>Bound to wait in airport</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/bajan_queen</span>' +
-            '<p>Cou-cou and flying fish. But honestly? I think the younger generation is losing these recipes. My niece asked me what cou-cou was last week. That hurt. We need to write these things down before they disappear. The tradition vs modernity struggle is real in Barbados right now.</p>' +
+            '<span class="reddit-author">u/GUYman299</span>' +
+            '<p>The service was always fine but I remember that, even at 8, finding it weird that the national airline was called BRITISH West Indian Airways. To be honest I found no significant change in actual service when it became Caribbean Airlines but I thought the name was more appropriate.</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/StrategyFlashy4526</span>' +
+            '<p>It was part of British Overseas Airways Corporation and was probably a well established trade name by the time it was sold to the Trinidad Gov. Changing trade name could lead to loss of business.</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/Pure_Toe3513</span>' +
+            '<p>Exactly, quite appropriate for the time of founding. In fact, the legacy is not completely dead as the codes BW and BWA are still used.</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/guyanese_diaspora</span>' +
-            '<p>Pepperpot. It\'s the taste of Christmas morning. My father says the pot should never be empty \u2014 you just keep adding to it. There\'s something beautiful about a dish that literally carries the flavours of yesterday into today. It\'s history in a pot.</p>' +
+            '<span class="reddit-author">u/Knight-Man</span>' +
+            '<p>This commercial was the last one I remember before it ceased operations in 2006 and it has lived rent free in my mind for 20 years now. It used to air during the evening news.</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/cuban_in_miami</span>' +
-            '<p>Ropa vieja. The name means "old clothes" but the taste is anything but old. I\'ve been making it differently from my abuela though. She would be horrified that I use a pressure cooker. But I keep her sofrito recipe exactly the same. Some things you don\'t change. That\'s the compromise \u2014 you adapt the method but keep the soul.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/dominican_york</span>' +
-            '<p>Mang\u00fa con los tres golpes. Every single morning. People think Dominican food is simple but there\'s so much technique in getting the mang\u00fa right. Too many plantains and it\'s heavy, too few and it\'s just mush. My t\u00eda says cooking is like life \u2014 balance is everything. I miss her kitchen so much sometimes it makes me cry.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/soca_soul</span>' +
-            '<p>I notice nobody mentioned how food at Carnival is different. The doubles you eat at 3am after playing mas is NOT the same as doubles from a regular vendor. There\'s magic in that context. The food tastes better because of where you are and who you\'re with. That\'s something outsiders never understand about Caribbean food culture \u2014 it\'s never just about the food.</p>' +
+            '<span class="reddit-author">u/[deleted]</span>' +
+            '<p>I loved it, but I knew there was always going to be a delay!</p>' +
           '</div>' +
         '</div>' +
       '</div>';
