@@ -89,20 +89,30 @@ const App = {
     AI.listAndSelectModel();
 
     // Load a thread
-    if (!isResume) {
-      await this.loadRandomThread();
-      this.state.sessionStartTime = new Date().toISOString();
-      this.state.phase = 'precoding';
-      Storage.save(this.state);
-    } else {
-      // Load the same thread
-      if (this.state.threadId) {
-        await this.loadThread(this.state.threadId);
+    try {
+      if (!isResume) {
+        await this.loadRandomThread();
+        this.state.sessionStartTime = new Date().toISOString();
+        this.state.phase = 'precoding';
+        Storage.save(this.state);
+      } else {
+        // Load the same thread
+        if (this.state.threadId) {
+          await this.loadThread(this.state.threadId);
+        }
+        // Re-render codes
+        Coding.renderCodesList();
+        // Re-render conversation
+        this.restoreChat();
       }
-      // Re-render codes
-      Coding.renderCodesList();
-      // Re-render conversation
-      this.restoreChat();
+    } catch (err) {
+      console.error('Thread loading error, using fallback:', err);
+      this.loadFallbackThread();
+      if (!isResume) {
+        this.state.sessionStartTime = new Date().toISOString();
+        this.state.phase = 'precoding';
+        Storage.save(this.state);
+      }
     }
 
     // Set up timer callbacks
@@ -135,12 +145,7 @@ const App = {
     // Update phase display
     this.updatePhaseDisplay();
 
-    // If fresh session, greet with AI
-    if (!isResume) {
-      this.greetStudent();
-    }
-
-    // Set up chat input
+    // Set up chat input (do this BEFORE async AI call)
     this.setupChatInput();
 
     // Set up hamburger menu
@@ -151,6 +156,11 @@ const App = {
 
     // Update research question display
     this.updateResearchQuestionDisplay();
+
+    // Greet with AI (after all UI is set up, so errors here don't block the app)
+    if (!isResume) {
+      this.greetStudent();
+    }
   },
 
   /**

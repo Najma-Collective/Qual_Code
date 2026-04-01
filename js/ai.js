@@ -3,7 +3,7 @@
  */
 
 const AI = {
-  apiKey: 'YOUR_API_KEY_HERE',
+  apiKey: 'AIzaSyAMAbna7v5R-z8ZauVGcm2c0E4VzOg62zE',
   selectedModel: 'gemini-3.1-pro-preview',
   availableModels: [],
   retryDelay: 1000,
