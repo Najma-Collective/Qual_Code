@@ -9,6 +9,8 @@ var AI = {
   maxRetryDelay: 30000,
   heartbeatIntervalId: null,
   heartbeatIntervalMs: 60000, // 1 minute
+  _heartbeatPaused: false,
+  _consecutiveHeartbeatFailures: 0,
 
   /**
    * Get the Gemini API key (localStorage first, then CONFIG fallback)
@@ -204,7 +206,14 @@ var AI = {
       return responseText;
     }).catch(function(err) {
       console.error('Gemini API error:', err);
-      App.showSnackbar('Connection issue — your work is saved locally.');
+      var status = err && err.httpStatus;
+      if (status === 429) {
+        App.showSnackbar('API quota exceeded — please wait or switch models.');
+      } else if (status === 400 || status === 401 || status === 403) {
+        App.showSnackbar('API key error — please check your key in settings.');
+      } else {
+        App.showSnackbar('Connection issue — your work is saved locally.');
+      }
       App.state.conversationHistory.pop();
       Storage.save(App.state);
       throw err;
@@ -242,8 +251,11 @@ var AI = {
       body: JSON.stringify(payload)
     }).then(function(response) {
       if (!response.ok) {
+        var status = response.status;
         return response.text().then(function(errBody) {
-          throw new Error('HTTP ' + response.status + ': ' + errBody);
+          var err = new Error('HTTP ' + status + ': ' + errBody);
+          err.httpStatus = status;
+          throw err;
         });
       }
       return response.json();
@@ -253,6 +265,12 @@ var AI = {
       }
       return data.candidates[0].content.parts[0].text;
     }).catch(function(err) {
+      // Don't retry on errors that won't resolve with retries
+      var status = err.httpStatus;
+      if (status === 429 || status === 400 || status === 401 || status === 403) {
+        console.warn('Non-retryable error (HTTP ' + status + '), not retrying.');
+        throw err;
+      }
       if (retries < maxRetries) {
         var delay = Math.min(self.retryDelay * Math.pow(2, retries), self.maxRetryDelay);
         console.log('Retrying in ' + delay + 'ms (attempt ' + (retries + 1) + '/' + maxRetries + ')...');
@@ -309,6 +327,8 @@ var AI = {
    */
   startHeartbeat: function() {
     this.stopHeartbeat();
+    this._heartbeatPaused = false;
+    this._consecutiveHeartbeatFailures = 0;
     var self = this;
 
     // Fire first heartbeat after 30 seconds (not waiting a full minute)
@@ -326,6 +346,7 @@ var AI = {
    */
   _doHeartbeat: function() {
     if (!this.hasApiKey()) return;
+    if (this._heartbeatPaused) return;
 
     var phase = App.state.phase;
     // Only pulse during pre-coding and coding phases
@@ -369,13 +390,27 @@ var AI = {
         'Keep any response to 1-2 sentences max.]';
     }
 
+    var self = this;
     this.sendMessage(heartbeatMsg).then(function(response) {
+      self._consecutiveHeartbeatFailures = 0;
       // Only show the response if the AI chose to speak (not silent)
       if (response && response.indexOf('[SILENT]') === -1 && response.trim().length > 0) {
         App.addChatMessage('model', response);
       }
-    }).catch(function() {
-      // Heartbeat failure is non-critical; silently ignore
+    }).catch(function(err) {
+      self._consecutiveHeartbeatFailures++;
+      var status = err && err.httpStatus;
+      // Stop heartbeat entirely on quota or auth errors
+      if (status === 429 || status === 400 || status === 401 || status === 403) {
+        console.warn('Heartbeat paused due to API error (HTTP ' + status + ').');
+        self._heartbeatPaused = true;
+        return;
+      }
+      // After 3 consecutive failures, pause heartbeat to avoid spam
+      if (self._consecutiveHeartbeatFailures >= 3) {
+        console.warn('Heartbeat paused after 3 consecutive failures.');
+        self._heartbeatPaused = true;
+      }
     });
   },
 
