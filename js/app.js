@@ -181,8 +181,14 @@ const App = {
         self.state.threadTitle = metadata.threadTitle;
         self.state.subreddit = metadata.subreddit;
         self.state.aiGuidance = metadata.aiGuidance;
+        self.state.snapshotHtml = metadata.snapshotHtml || '';
         Storage.save(self.state);
         self.updateResearchQuestionDisplay();
+
+        if (self.state.snapshotHtml) {
+          self.renderSnapshotThread(self.state.snapshotHtml);
+          return null;
+        }
 
         // Now try to load the thread HTML
         return fetch('threads/' + threadId + '/index.html');
@@ -192,6 +198,7 @@ const App = {
         return response.text();
       })
       .then(function(html) {
+        if (!html) return;
         // Only replace if the HTML looks like clean content (not a full page with <html> tags)
         var threadContent = document.getElementById('thread-content');
         if (threadContent && html.length < 500000) {
@@ -239,6 +246,30 @@ const App = {
         console.log('Using fallback thread (fetch failed):', err.message);
         // Fallback is already loaded, nothing to do
       });
+  },
+
+  /**
+   * Render an offline/frozen thread snapshot inside an iframe.
+   */
+  renderSnapshotThread(snapshotPath) {
+    var threadContent = document.getElementById('thread-content');
+    if (!threadContent || !snapshotPath) return;
+
+    var iframe = document.createElement('iframe');
+    iframe.className = 'thread-snapshot-frame';
+    iframe.title = 'Frozen Reddit thread snapshot';
+    iframe.loading = 'eager';
+    iframe.referrerPolicy = 'no-referrer';
+    iframe.src = snapshotPath;
+
+    threadContent.innerHTML = '';
+    threadContent.appendChild(iframe);
+
+    if (typeof Coding !== 'undefined' && Coding.bindSnapshotFrame) {
+      iframe.addEventListener('load', function() {
+        Coding.bindSnapshotFrame(iframe);
+      });
+    }
   },
 
   /**
