@@ -5,6 +5,16 @@
 const App = {
   state: null,
   snackbarTimeout: null,
+  snapshotMap: {
+    bwia: {
+      localPath: 'threads/thread-02/index.html',
+      sourceUrl: 'https://www.reddit.com/r/AskTheCaribbean/comments/1rvtqy4/what_are_your_guys_thoughts_on_bwia_west_indies/'
+    },
+    'us-influence': {
+      localPath: 'threads/thread-01/index.html',
+      sourceUrl: 'https://www.reddit.com/r/AskTheCaribbean/comments/1s2u0k8/how_do_you_feel_about_the_theories_regarding_us/'
+    }
+  },
 
   /**
    * Initialise the application
@@ -104,6 +114,7 @@ const App = {
     this.setupChatInput();
     this.setupDrawer();
     this.setupToolbarActions();
+    this.setupThreadViewControls();
 
     // 4. Set up timer
     if (!isResume) {
@@ -161,6 +172,71 @@ const App = {
 
     // 8. Start AI heartbeat for agentic check-ins during pre-coding/coding
     AI.startHeartbeat();
+  },
+
+  setupThreadViewControls() {
+    var modeSelect = document.getElementById('thread-view-mode');
+    var snapshotSelect = document.getElementById('snapshot-select');
+    var savedMode = 'snapshot';
+    var savedSnapshot = this.state.snapshotSource || (this.state.threadId === 'thread-02' ? 'bwia' : 'us-influence');
+    this.state.threadViewMode = savedMode;
+    this.state.snapshotSource = savedSnapshot;
+
+    if (modeSelect) {
+      modeSelect.value = savedMode;
+      modeSelect.onchange = () => {
+        this.state.threadViewMode = modeSelect.value;
+        Storage.save(this.state);
+        this.updateThreadViewMode();
+      };
+    }
+
+    if (snapshotSelect) {
+      snapshotSelect.value = savedSnapshot;
+      snapshotSelect.onchange = () => {
+        this.state.snapshotSource = snapshotSelect.value;
+        Storage.save(this.state);
+        this.updateSnapshotSourceLink();
+        this.loadSnapshotFrame();
+      };
+    }
+
+    this.updateSnapshotSourceLink();
+    this.updateThreadViewMode();
+  },
+
+  updateThreadViewMode() {
+    var structured = document.getElementById('thread-content');
+    var snapshot = document.getElementById('snapshot-browser');
+    var mode = this.state.threadViewMode || 'structured';
+
+    if (structured) structured.style.display = mode === 'snapshot' ? 'none' : 'block';
+    if (snapshot) snapshot.style.display = mode === 'snapshot' ? 'block' : 'none';
+
+    if (mode === 'snapshot') {
+      this.loadSnapshotFrame();
+    }
+  },
+
+  loadSnapshotFrame() {
+    var frame = document.getElementById('snapshot-frame');
+    if (!frame) return;
+    var source = this.state.snapshotSource || 'bwia';
+    var target = this.snapshotMap[source];
+    if (!target || !target.localPath) return;
+
+    if (frame.getAttribute('src') !== target.localPath) {
+      frame.setAttribute('src', target.localPath);
+    }
+  },
+
+  updateSnapshotSourceLink() {
+    var source = this.state.snapshotSource || 'bwia';
+    var target = this.snapshotMap[source];
+    var link = document.getElementById('snapshot-open-link');
+    if (link && target && target.sourceUrl) {
+      link.href = target.sourceUrl;
+    }
   },
 
   /**

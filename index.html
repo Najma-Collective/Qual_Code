@@ -98,12 +98,28 @@
 
       <!-- Thread Pane -->
       <div class="thread-pane" id="thread-pane" role="region" aria-label="Reddit thread">
+        <div class="thread-view-controls mdc-card">
+          <label for="thread-view-mode">View:</label>
+          <select id="thread-view-mode" class="code-filter-native-select" aria-label="Thread view mode">
+            <option value="snapshot">Snapshot browser</option>
+            <option value="structured">Structured thread</option>
+          </select>
+          <label for="snapshot-select">Snapshot:</label>
+          <select id="snapshot-select" class="code-filter-native-select" aria-label="Snapshot source">
+            <option value="bwia">BWIA (reddit link 1)</option>
+            <option value="us-influence">US influence (reddit link 2)</option>
+          </select>
+          <a id="snapshot-open-link" href="#" target="_blank" rel="noopener noreferrer" class="snapshot-open-link">Open source</a>
+        </div>
         <div class="research-question-bar mdc-card">
           <div class="research-question-bar__label">Research Question</div>
           <div class="research-question-bar__text" id="research-question-text">Loading...</div>
         </div>
         <div id="thread-content">
           <p style="color: var(--outline); text-align: center; padding: 32px;">Loading thread...</p>
+        </div>
+        <div id="snapshot-browser" class="snapshot-browser" style="display:none;">
+          <iframe id="snapshot-frame" class="snapshot-browser__frame" title="Reddit snapshot browser"></iframe>
         </div>
       </div>
 
