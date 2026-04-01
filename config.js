@@ -1,10 +1,10 @@
 /**
  * config.js — API key configuration
  *
- * This key is used for both the Gemini AI tutor and Google Drive
- * document fetching. The GCP project must have the Generative
- * Language API and Google Drive API enabled.
+ * GEMINI_API_KEY: for the Generative Language API (AI tutor)
+ * DRIVE_API_KEY:  for the Google Drive API (document fetching)
  */
 var CONFIG = {
-  API_KEY: 'AIzaSyDzrr_f-QsylDXRq4Z0UCBAsk4sBRX7XDc'
+  GEMINI_API_KEY: 'AIzaSyDzrr_f-QsylDXRq4Z0UCBAsk4sBRX7XDc',
+  DRIVE_API_KEY: 'AIzaSyBDaCszfawWoriOdJdx_1K8oICUAyxaX2A'
 };

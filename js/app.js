@@ -191,13 +191,13 @@ const App = {
     var docId = this.state.documentId;
     if (!docId) return;
 
-    var apiKey = AI.getApiKey();
-    if (!apiKey) {
+    var driveKey = (typeof CONFIG !== 'undefined' && CONFIG.DRIVE_API_KEY) ? CONFIG.DRIVE_API_KEY : AI.getApiKey();
+    if (!driveKey) {
       console.log('No API key available for Google Drive export. Check config.js.');
       return;
     }
 
-    var endpoint = 'https://www.googleapis.com/drive/v3/files/' + docId + '/export?mimeType=text/html&key=' + apiKey;
+    var endpoint = 'https://www.googleapis.com/drive/v3/files/' + docId + '/export?mimeType=text/html&key=' + driveKey;
 
     fetch(endpoint)
       .then(function(response) {

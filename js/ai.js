@@ -14,8 +14,10 @@ var AI = {
    * Get the API key from the embedded config
    */
   getApiKey: function() {
-    return (typeof CONFIG !== 'undefined' && CONFIG.API_KEY && CONFIG.API_KEY !== 'YOUR_API_KEY_HERE')
-      ? CONFIG.API_KEY : '';
+    if (typeof CONFIG === 'undefined') return '';
+    if (CONFIG.GEMINI_API_KEY) return CONFIG.GEMINI_API_KEY;
+    if (CONFIG.API_KEY && CONFIG.API_KEY !== 'YOUR_API_KEY_HERE') return CONFIG.API_KEY;
+    return '';
   },
 
   /**
