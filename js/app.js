@@ -142,7 +142,13 @@ const App = {
     }
 
     Timer.callbacks.onFiveMinutes = () => {
-      if (this.state.phase === 'precoding' || this.state.phase === 'coding') {
+      if (this.state.phase === 'precoding') {
+        // Show filter selection bar — student picks filter after reading
+        if (!this.state.selectedFilter) {
+          var filterBar = document.getElementById('filter-selection-bar');
+          if (filterBar) filterBar.style.display = 'flex';
+          this.addChatMessage('system', 'Time to choose a coding filter! Based on what you noticed while reading, select a filter from the dropdown below.');
+        }
         this.state.phase = 'coding';
         Storage.save(this.state);
         this.updatePhaseDisplay();
@@ -166,7 +172,6 @@ const App = {
 
     Timer.start(this.state.elapsedSeconds);
     this.updatePhaseDisplay();
-    this.updateResearchQuestionDisplay();
 
     // 5. If resuming, restore codes and chat
     if (isResume) {
@@ -284,16 +289,6 @@ const App = {
   },
 
   /**
-   * Update the research question display
-   */
-  updateResearchQuestionDisplay() {
-    var el = document.getElementById('research-question-text');
-    if (el && this.state.researchQuestion) {
-      el.textContent = this.state.researchQuestion;
-    }
-  },
-
-  /**
    * Update phase display in the UI
    */
   updatePhaseDisplay() {
@@ -318,23 +313,14 @@ const App = {
   greetStudent() {
     var self = this;
     var docInfo = this.state.documentTitle ? ' The document is titled "' + this.state.documentTitle + '".' : '';
-    var rqInfo = this.state.researchQuestion ? ' The research question is: "' + this.state.researchQuestion + '".' : '';
 
     AI.sendMessage(
-      '[SYSTEM: The session has just started. The student\'s ID is "' + this.state.studentId + '".' + docInfo + rqInfo + ' The student has uploaded a personal reflection or field notes document for qualitative coding. Please greet the student warmly, briefly explain the task (they will read their document and begin coding using their chosen filter), and then ask them which coding filter they would like to use for this session and why. List the available filters: In Vivo, Descriptive, Process, Initial, Emotion, Values, Evaluation, Versus, Structural, Holistic, Provisional. The student will select their filter from a dropdown that will appear below this chat.]'
+      '[SYSTEM: The session has just started. The student\'s ID is "' + this.state.studentId + '".' + docInfo + ' The student has uploaded a personal reflection or field notes document for inductive qualitative coding. Please greet the student warmly and explain that they will first spend a few minutes reading the document with an open mind to immerse themselves in the data. After reading, they will choose a coding filter based on what they noticed. Encourage them to start reading now. Do NOT list or ask about coding filters yet — that comes later.]'
     ).then(function(greeting) {
       self.addChatMessage('model', greeting);
-      if (!self.state.selectedFilter) {
-        var filterBar = document.getElementById('filter-selection-bar');
-        if (filterBar) filterBar.style.display = 'flex';
-      }
     }).catch(function(err) {
       console.error('AI greeting failed:', err);
-      self.addChatMessage('model', 'Welcome! Today you will read your document and practise qualitative coding. First, please choose a coding filter from the dropdown below. Then take a few minutes to read the document and start creating codes by selecting text.');
-      if (!self.state.selectedFilter) {
-        var filterBar = document.getElementById('filter-selection-bar');
-        if (filterBar) filterBar.style.display = 'flex';
-      }
+      self.addChatMessage('model', 'Welcome! Today you will practise inductive qualitative coding. Start by reading your document with an open mind. After a few minutes, you will choose a coding filter based on what you notice in the data.');
     });
   },
 

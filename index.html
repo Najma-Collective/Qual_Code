@@ -121,10 +121,6 @@
 
       <!-- Document Pane -->
       <div class="thread-pane" id="thread-pane" role="region" aria-label="Document">
-        <div class="research-question-bar mdc-card">
-          <div class="research-question-bar__label">Research Question</div>
-          <div class="research-question-bar__text" id="research-question-text">Loading...</div>
-        </div>
         <div id="thread-content">
           <p style="color: var(--outline); text-align: center; padding: 32px;">Paste a Google Doc URL in setup to load your document.</p>
         </div>
@@ -153,7 +149,7 @@
             <option value="Values">Values — beliefs and attitudes</option>
             <option value="Evaluation">Evaluation — evaluative judgments</option>
             <option value="Versus">Versus — dichotomies and conflicts</option>
-            <option value="Structural">Structural — relevance to research question</option>
+            <option value="Structural">Structural — relevance to a specific topic</option>
             <option value="Holistic">Holistic — single code for a large unit</option>
             <option value="Provisional">Provisional — pre-established code list</option>
           </select>
@@ -357,7 +353,7 @@
         'Values': 'Captures values, attitudes, and beliefs reflected in the data.',
         'Evaluation': 'Assigns evaluative judgments to the data.',
         'Versus': 'Identifies dichotomies, conflicts, or binary oppositions.',
-        'Structural': 'Codes data according to its relevance to the research question.',
+        'Structural': 'Codes data according to its relevance to a specific topic or question.',
         'Holistic': 'Applies a single code to a large unit of data. Captures the gist.',
         'Provisional': 'Starts from a pre-established list of codes, then modifies as needed.'
       };
@@ -373,10 +369,10 @@
             // Notify AI of the filter choice
             var filterBar = document.getElementById('filter-selection-bar');
             if (filterBar) filterBar.style.display = 'none';
-            // Send filter choice as a user message
+            // Send filter choice as a user message and have AI ask why
             App.addChatMessage('user', 'I choose the ' + this.value + ' coding filter.');
             App.showTypingIndicator();
-            AI.sendMessage('I choose the ' + this.value + ' coding filter.').then(function(response) {
+            AI.sendMessage('[SYSTEM: The student has just chosen the ' + this.value + ' coding filter after their pre-coding reading phase. Ask them WHY they chose this particular filter — what did they notice in the data that led them to this choice? Then briefly explain how the filter works and encourage them to start coding.]').then(function(response) {
               App.hideTypingIndicator();
               App.addChatMessage('model', response);
             }).catch(function() {
