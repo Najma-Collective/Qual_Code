@@ -10,6 +10,7 @@ var Coding = {
   ],
   colourIndex: 0,
   codeColourMap: {},
+  activeSnapshotFrame: null,
 
   /**
    * Coding filter definitions from Saldana
@@ -66,6 +67,23 @@ var Coding = {
   },
 
   /**
+   * Bind selection listeners to a snapshot iframe (frozen Reddit page).
+   */
+  bindSnapshotFrame: function(iframe) {
+    if (!iframe || !iframe.contentDocument) return;
+    var self = this;
+    this.activeSnapshotFrame = iframe;
+
+    var snapshotDoc = iframe.contentDocument;
+    snapshotDoc.addEventListener('mouseup', function(e) {
+      setTimeout(function() { self.handleTextSelection(e); }, 10);
+    });
+    snapshotDoc.addEventListener('touchend', function(e) {
+      setTimeout(function() { self.handleTextSelection(e); }, 100);
+    });
+  },
+
+  /**
    * Handle text selection in the thread pane
    */
   handleTextSelection: function(e) {
@@ -73,6 +91,9 @@ var Coding = {
     if (!toolbar) return;
 
     var selection = window.getSelection();
+    if ((!selection || selection.isCollapsed || !selection.toString().trim()) && this.activeSnapshotFrame && this.activeSnapshotFrame.contentWindow) {
+      selection = this.activeSnapshotFrame.contentWindow.getSelection();
+    }
 
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
       // Don't hide if the user clicked on the toolbar itself
@@ -86,7 +107,9 @@ var Coding = {
     if (!threadPane) return;
 
     var anchorNode = selection.anchorNode;
-    if (!threadPane.contains(anchorNode)) {
+    var isInMainPane = threadPane.contains(anchorNode);
+    var isInSnapshot = this.activeSnapshotFrame && this.activeSnapshotFrame.contentDocument && this.activeSnapshotFrame.contentDocument.contains(anchorNode);
+    if (!isInMainPane && !isInSnapshot) {
       toolbar.classList.remove('visible');
       return;
     }
@@ -96,6 +119,14 @@ var Coding = {
 
     var range = selection.getRangeAt(0);
     var rect = range.getBoundingClientRect();
+    if (isInSnapshot && this.activeSnapshotFrame) {
+      var frameRect = this.activeSnapshotFrame.getBoundingClientRect();
+      rect = {
+        top: rect.top + frameRect.top,
+        left: rect.left + frameRect.left,
+        width: rect.width
+      };
+    }
 
     // Position toolbar above the selection
     var top = rect.top + window.scrollY - 56;
@@ -118,6 +149,9 @@ var Coding = {
    */
   applyAnnotation: function(type, colour) {
     var selection = window.getSelection();
+    if ((!selection || selection.isCollapsed) && this.activeSnapshotFrame && this.activeSnapshotFrame.contentWindow) {
+      selection = this.activeSnapshotFrame.contentWindow.getSelection();
+    }
     if (!selection || selection.isCollapsed) return;
 
     var range = selection.getRangeAt(0);

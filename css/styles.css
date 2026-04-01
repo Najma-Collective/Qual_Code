@@ -224,6 +224,13 @@ html, body {
   margin-top: 4px;
   font-style: italic;
 }
+.thread-snapshot-frame {
+  width: 100%;
+  min-height: 70vh;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+}
 
 /* Reddit thread styles */
 .reddit-thread { font-family: var(--font-family); }
