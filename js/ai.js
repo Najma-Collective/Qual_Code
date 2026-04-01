@@ -10,6 +10,7 @@ var AI = {
   heartbeatIntervalId: null,
   heartbeatIntervalMs: 60000, // 1 minute
   _heartbeatPaused: false,
+  _heartbeatInFlight: false,
   _consecutiveHeartbeatFailures: 0,
 
   /**
@@ -347,6 +348,7 @@ var AI = {
   _doHeartbeat: function() {
     if (!this.hasApiKey()) return;
     if (this._heartbeatPaused) return;
+    if (this._heartbeatInFlight) return;
 
     var phase = App.state.phase;
     // Only pulse during pre-coding and coding phases
@@ -391,13 +393,16 @@ var AI = {
     }
 
     var self = this;
+    this._heartbeatInFlight = true;
     this.sendMessage(heartbeatMsg).then(function(response) {
+      self._heartbeatInFlight = false;
       self._consecutiveHeartbeatFailures = 0;
       // Only show the response if the AI chose to speak (not silent)
       if (response && response.indexOf('[SILENT]') === -1 && response.trim().length > 0) {
         App.addChatMessage('model', response);
       }
     }).catch(function(err) {
+      self._heartbeatInFlight = false;
       self._consecutiveHeartbeatFailures++;
       var status = err && err.httpStatus;
       // Stop heartbeat entirely on quota or auth errors
