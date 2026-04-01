@@ -24,6 +24,7 @@ const Storage = {
       aiFollowUpResponses: [],
       keyTakeaway: '',
       selectedModel: 'gemini-3.1-pro-preview',
+      selectedFilter: '',
       followUpQuestionIndex: 0
     };
   },

@@ -95,6 +95,24 @@ html, body {
   width: 100%;
   margin-bottom: 16px;
 }
+.setup-card__filter-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--on-surface);
+  text-align: left;
+  margin-bottom: 8px;
+}
+.session-filter-select {
+  margin-bottom: 4px;
+}
+.setup-filter-help {
+  font-size: 12px;
+  color: var(--outline);
+  text-align: left;
+  min-height: 18px;
+  margin-bottom: 16px;
+}
 .setup-btn {
   width: 100%;
   height: 48px;
@@ -185,6 +203,7 @@ html, body {
   -webkit-overflow-scrolling: touch;
   user-select: text;
   -webkit-user-select: text;
+  touch-action: pan-y;
 }
 .research-question-bar {
   padding: 12px 16px !important;
@@ -210,6 +229,17 @@ html, body {
 .reddit-thread { font-family: var(--font-family); }
 .reddit-header { margin-bottom: 16px; }
 .reddit-sub { font-size: 12px; color: var(--primary); font-weight: 500; }
+.reddit-flair {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--on-primary);
+  background: var(--primary);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
 .reddit-title { font-size: 18px; font-weight: 500; margin: 4px 0; }
 .reddit-meta { font-size: 12px; color: var(--outline); }
 .reddit-post {
@@ -234,10 +264,21 @@ html, body {
   font-size: 12px;
   font-weight: 500;
   color: var(--primary);
-  display: block;
+  display: inline;
   margin-bottom: 4px;
 }
-.reddit-comment p { font-size: 14px; line-height: 1.6; }
+.reddit-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--on-primary);
+  background: var(--tertiary);
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.reddit-comment p { font-size: 14px; line-height: 1.6; margin-top: 4px; }
 
 /* ========== CHAT PANE ========== */
 .chat-pane {
@@ -419,6 +460,29 @@ html, body {
   border-color: var(--primary);
   outline: none;
 }
+.code-modal__session-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface-variant);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--primary);
+  margin-bottom: 12px;
+}
+.code-modal__filter-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--outline);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.code-modal__filter-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+}
 .filter-help {
   font-size: 12px;
   color: var(--outline);
@@ -569,6 +633,23 @@ html, body {
   z-index: 500;
 }
 
+/* ========== EXTRA SMALL SCREENS (< 360px) ========== */
+@media (max-width: 359px) {
+  .setup-card {
+    padding: 24px 16px;
+  }
+  .setup-card__title {
+    font-size: 22px;
+  }
+  .reddit-comment.reply {
+    margin-left: 12px;
+  }
+  .chat-bubble {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+}
+
 /* ========== ACCESSIBILITY ========== */
 .sr-only {
   position: absolute; width: 1px; height: 1px;
@@ -607,6 +688,61 @@ html, body {
 /* ========== MOBILE (< 768px) ========== */
 @media (max-width: 767px) {
   .codes-panel-desktop { display: none; }
-  .thread-pane { max-height: 50%; }
-  .chat-pane { max-height: 50%; }
+  .thread-pane {
+    flex: 1 1 55%;
+    max-height: 55%;
+    min-height: 40%;
+  }
+  .chat-pane {
+    flex: 1 1 45%;
+    max-height: 60%;
+    min-height: 35%;
+  }
+
+  /* Larger touch targets on mobile */
+  .annotation-toolbar .mdc-icon-button {
+    width: 44px; height: 44px;
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .colour-dot {
+    width: 24px; height: 24px;
+  }
+  .btn-create-code-toolbar {
+    height: 40px !important;
+    font-size: 13px !important;
+    padding: 0 16px !important;
+  }
+
+  /* Code card touch targets */
+  .code-card__header {
+    min-height: 48px;
+    padding: 12px;
+  }
+  .code-card__btn {
+    width: 44px !important; height: 44px !important;
+    padding: 10px !important;
+  }
+
+  /* Code modal takes full width on mobile */
+  .code-modal {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  }
+
+  /* Chat send button touch target */
+  .btn-send {
+    width: 48px !important; height: 48px !important;
+  }
+
+  /* Bigger timer and phase on mobile */
+  .app-bar__timer {
+    font-size: 18px;
+  }
+  .app-bar__phase {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
 }

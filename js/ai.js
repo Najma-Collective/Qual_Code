@@ -8,6 +8,8 @@ var AI = {
   availableModels: [],
   retryDelay: 1000,
   maxRetryDelay: 30000,
+  heartbeatIntervalId: null,
+  heartbeatIntervalMs: 60000, // 1 minute
 
   /**
    * Load API key from localStorage
@@ -128,6 +130,8 @@ var AI = {
       }).join('\n\n');
     }
 
+    var selectedFilter = state.selectedFilter || 'not yet chosen';
+
     return 'You are a supportive AI tutor assisting a student with a qualitative coding exercise. Your role is to facilitate and scaffold — never to produce content or perform analysis on the student\'s behalf. You are a catalyst and a gentle guide.\n\n' +
     '## Context\n' +
     '- The student is on an Introduction to Qualitative Research Methods course.\n' +
@@ -135,7 +139,8 @@ var AI = {
     '- They are practising first-cycle qualitative coding using methods from Johnny Saldaña\'s "The Coding Manual for Qualitative Researchers."\n' +
     '- This is a formative (self-check) exercise. There are no grades.\n' +
     '- The session lasts 20 minutes. Current elapsed time: ' + elapsedMinutes + ' minutes.\n' +
-    '- Current phase: ' + state.phase + '.\n\n' +
+    '- Current phase: ' + state.phase + '.\n' +
+    '- The student has chosen ONE coding filter for the entire session: ' + selectedFilter + '.\n\n' +
     '## Research Question\n' + (state.researchQuestion || 'Not yet loaded.') + '\n\n' +
     '## Thread Being Analysed\nTitle: "' + (state.threadTitle || 'Not yet loaded.') + '"\nSubreddit: ' + (state.subreddit || 'Not yet loaded.') + '\n\n' +
     '## Teacher Guidance for This Thread\n' + (state.aiGuidance || 'No specific guidance provided.') + '\n\n' +
@@ -143,13 +148,15 @@ var AI = {
     '## Your Behaviour\n\n' +
     '### During Setup (minutes 0–1)\n' +
     '- Greet the student warmly. Use accessible, clear language (B1 level English).\n' +
-    '- Briefly explain the task: they will read the Reddit thread, choose a coding filter, and begin coding.\n' +
-    '- Ask the student which coding filter they plan to use and why.\n\n' +
+    '- Briefly explain the task: they will read the Reddit thread and begin coding using their chosen filter.\n' +
+    '- If the student has already chosen a filter (' + selectedFilter + '), acknowledge their choice and briefly explain how it works. If not, ask which coding filter they plan to use and why.\n\n' +
     '### During Pre-coding (minutes 1–5)\n' +
     '- If the student shares preliminary observations, acknowledge them briefly.\n' +
+    '- If the student has not yet chosen a coding filter, gently remind them to select one before they start coding.\n' +
     '- At minute 5, gently prompt: "You might want to start assigning your first codes now."\n\n' +
     '### During Coding (minutes 5–15)\n' +
-    '- **Be silent.** Do not intervene unless the student explicitly asks a question.\n\n' +
+    '- **Be mostly silent.** Do not intervene unless the student explicitly asks a question.\n' +
+    '- If the student has created 0 codes after 7+ minutes, you may gently encourage them once.\n\n' +
     '### During Follow-up (minutes 15–18)\n' +
     '- Ask exactly 4 questions, one at a time, referencing the student\'s specific codes and memos.\n' +
     '- Question types: CLARIFY, EXPAND, NUANCE, EMERGENT.\n\n' +
@@ -281,5 +288,67 @@ var AI = {
     }).catch(function() {
       App.addChatMessage('model', 'Before we finish, what is one key takeaway from this session for you?');
     });
+  },
+
+  /**
+   * Start the periodic heartbeat check-in during pre-coding and coding phases.
+   * Sends a context-only API call once per minute so the AI can proactively
+   * intervene if it notices something that needs addressing.
+   */
+  startHeartbeat: function() {
+    this.stopHeartbeat();
+    var self = this;
+
+    this.heartbeatIntervalId = setInterval(function() {
+      if (!self.hasApiKey()) return;
+
+      var phase = App.state.phase;
+      // Only pulse during pre-coding and coding phases
+      if (phase !== 'precoding' && phase !== 'coding') {
+        self.stopHeartbeat();
+        return;
+      }
+
+      var elapsed = Timer.getElapsedMinutes();
+      var codeCount = App.state.codes.length;
+      var filterChosen = App.state.selectedFilter || '';
+
+      var heartbeatMsg;
+      if (phase === 'precoding') {
+        heartbeatMsg = '[SYSTEM HEARTBEAT — do NOT repeat this tag to the student. ' +
+          'Elapsed: ' + elapsed + ' min. Phase: pre-coding. ' +
+          'Codes created: ' + codeCount + '. Selected filter: ' + (filterChosen || 'not yet chosen') + '. ' +
+          'If the student has not yet chosen a coding filter, gently ask which one they plan to use and why. ' +
+          'If they have chosen a filter but have not begun reading, encourage them to start reading the thread. ' +
+          'If they seem to be reading already, stay silent and respond with exactly: "[SILENT]". ' +
+          'Keep any response to 1-2 sentences max.]';
+      } else {
+        heartbeatMsg = '[SYSTEM HEARTBEAT — do NOT repeat this tag to the student. ' +
+          'Elapsed: ' + elapsed + ' min. Phase: coding. ' +
+          'Codes created: ' + codeCount + '. Selected filter: ' + (filterChosen || 'not yet chosen') + '. ' +
+          'If the student has 0 codes and more than 7 minutes have elapsed, gently encourage them to start coding. ' +
+          'Otherwise, stay silent and respond with exactly: "[SILENT]". ' +
+          'Keep any response to 1-2 sentences max.]';
+      }
+
+      self.sendMessage(heartbeatMsg).then(function(response) {
+        // Only show the response if the AI chose to speak (not silent)
+        if (response && response.indexOf('[SILENT]') === -1 && response.trim().length > 0) {
+          App.addChatMessage('model', response);
+        }
+      }).catch(function() {
+        // Heartbeat failure is non-critical; silently ignore
+      });
+    }, this.heartbeatIntervalMs);
+  },
+
+  /**
+   * Stop the heartbeat check-in
+   */
+  stopHeartbeat: function() {
+    if (this.heartbeatIntervalId) {
+      clearInterval(this.heartbeatIntervalId);
+      this.heartbeatIntervalId = null;
+    }
   }
 };

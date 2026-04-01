@@ -159,8 +159,16 @@ var Coding = {
     document.getElementById('code-selected-text').textContent = selectedText || '';
     document.getElementById('code-label-input').value = editingCode ? editingCode.label : '';
     document.getElementById('code-memo-input').value = editingCode ? editingCode.memo : '';
-    document.getElementById('code-filter-select').value = editingCode ? editingCode.filter : '';
-    document.getElementById('filter-help').textContent = '';
+
+    // Use session-wide filter; set the hidden select and display the read-only label
+    var sessionFilter = App.state.selectedFilter || '';
+    document.getElementById('code-filter-select').value = sessionFilter;
+    var filterValueEl = document.getElementById('code-filter-value');
+    if (filterValueEl) {
+      filterValueEl.textContent = sessionFilter || 'Not selected';
+    }
+    var filterObj = sessionFilter ? this.filters.find(function(f) { return f.value === sessionFilter; }) : null;
+    document.getElementById('filter-help').textContent = filterObj ? filterObj.description : '';
 
     modal.dataset.editingId = editingCode ? editingCode.id : '';
     modal.dataset.selectedText = selectedText || (editingCode ? editingCode.highlightedText : '');
@@ -183,7 +191,7 @@ var Coding = {
   saveCode: function() {
     var modal = document.getElementById('code-modal');
     var label = document.getElementById('code-label-input').value.trim();
-    var filter = document.getElementById('code-filter-select').value;
+    var filter = App.state.selectedFilter || '';
     var memo = document.getElementById('code-memo-input').value.trim();
     var selectedText = modal.dataset.selectedText;
     var editingId = modal.dataset.editingId;
@@ -193,7 +201,7 @@ var Coding = {
       return;
     }
     if (!filter) {
-      App.showSnackbar('Please select a coding filter.');
+      App.showSnackbar('Please choose a coding filter from the setup screen or ask the AI tutor.');
       return;
     }
 
