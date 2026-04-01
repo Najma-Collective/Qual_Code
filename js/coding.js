@@ -309,13 +309,16 @@ var Coding = {
         ? code.highlightedText.substring(0, 50) + '...'
         : code.highlightedText;
 
+      var codeTime = code.timestamp ? new Date(code.timestamp) : null;
+      var codeTimeStr = codeTime ? (String(codeTime.getHours()).padStart(2, '0') + ':' + String(codeTime.getMinutes()).padStart(2, '0')) : '';
+
       html +=
         '<div class="code-card mdc-card" data-code-id="' + code.id + '">' +
           '<div class="code-card__header" onclick="Coding.toggleCodeExpand(\'' + code.id + '\')">' +
             '<div class="code-card__colour" style="background-color: ' + colour + '"></div>' +
             '<div class="code-card__info">' +
               '<span class="code-card__label">' + self.escapeHtml(code.label) + '</span>' +
-              '<span class="code-card__filter">' + self.escapeHtml(code.filter) + '</span>' +
+              '<span class="code-card__filter">' + self.escapeHtml(code.filter) + (codeTimeStr ? ' &middot; ' + codeTimeStr : '') + '</span>' +
               '<span class="code-card__excerpt">"' + self.escapeHtml(excerpt) + '"</span>' +
             '</div>' +
             '<div class="code-card__actions">' +

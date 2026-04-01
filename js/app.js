@@ -73,11 +73,6 @@ const App = {
       if (apiKeyInput && apiKeyInput.value.trim()) {
         AI.saveApiKey(apiKeyInput.value.trim());
       }
-      // Save session-wide coding filter
-      var filterSelect = document.getElementById('session-filter-select');
-      if (filterSelect && filterSelect.value) {
-        self.state.selectedFilter = filterSelect.value;
-      }
       self.state.studentId = studentId;
       Storage.save(self.state);
       self.startSession(false);
@@ -94,10 +89,17 @@ const App = {
     document.getElementById('setup-screen').classList.remove('active');
     document.getElementById('main-app').classList.add('active');
 
-    // 2. Load fallback thread content immediately (synchronous, always works)
+    // 2. Assign a random thread if not already set
+    if (!this.state.threadId) {
+      var threads = ['thread-01', 'thread-02'];
+      this.state.threadId = threads[Math.floor(Math.random() * threads.length)];
+      Storage.save(this.state);
+    }
+
+    // 3. Load fallback thread content immediately (synchronous, always works)
     this.loadFallbackThread();
 
-    // 3. Set up all UI handlers (synchronous — must never be blocked by network)
+    // 4. Set up all UI handlers (synchronous — must never be blocked by network)
     Coding.init();
     this.setupChatInput();
     this.setupDrawer();
@@ -141,6 +143,11 @@ const App = {
     if (isResume) {
       Coding.renderCodesList();
       this.restoreChat();
+      // Show filter bar if no filter selected yet
+      if (!this.state.selectedFilter) {
+        var filterBar = document.getElementById('filter-selection-bar');
+        if (filterBar) filterBar.style.display = 'flex';
+      }
     }
 
     // 6. Background: try to load the real thread (replaces fallback if successful)
@@ -162,8 +169,7 @@ const App = {
    */
   tryLoadThread() {
     var self = this;
-    var threadId = this.state.threadId || 'thread-01';
-    this.state.threadId = threadId;
+    var threadId = this.state.threadId;
 
     fetch('threads/' + threadId + '/metadata.json')
       .then(function(response) {
@@ -205,136 +211,23 @@ const App = {
     var threadContent = document.getElementById('thread-content');
     if (!threadContent) return;
 
-    // Set default metadata if not already set
+    // Set default metadata based on which thread is selected
     if (!this.state.threadTitle) {
-      this.state.threadTitle = 'How do you feel about the theories regarding US influence in the Caribbean?';
-      this.state.subreddit = 'r/AskTheCaribbean';
-      this.state.researchQuestion = 'How do Caribbean Reddit users perceive and resist narratives of US influence in the region?';
-      this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) the distinction between \'influence\' and \'control/colonialism\' in Caribbean perspectives; (2) how Puerto Rico functions as a reference point for challenging statehood narratives; (3) the role of sovereignty and self-determination as core Caribbean values; (4) how historical knowledge (Monroe Doctrine, colonial history) shapes contemporary attitudes; (5) the intersection of race, immigration policy, and geopolitical power in Caribbean discourse.';
+      if (this.state.threadId === 'thread-02') {
+        this.state.threadTitle = 'How do people in the Caribbean feel about CARICOM today?';
+        this.state.subreddit = 'r/AskTheCaribbean';
+        this.state.researchQuestion = 'How do Caribbean nationals evaluate the effectiveness and relevance of CARICOM as a regional institution, and what tensions emerge between national sovereignty and regional integration?';
+        this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) the tension between CARICOM\'s original purpose as a trade agreement and expectations for EU-style integration; (2) nationalist attitudes as barriers to freedom of movement and deeper integration; (3) the distinction between CARICOM and CSME that commenters raise; (4) concrete institutional achievements (CXC, UWI, CDEMA, CCJ) versus perceived failures; (5) how different national perspectives (Guyanese, Dominican, Trinidadian, Barbadian) shape attitudes toward CARICOM; (6) the contested inclusion of Haiti and the DR as revealing fault lines in Caribbean identity and solidarity.';
+      } else {
+        this.state.threadTitle = 'How do you feel about the theories regarding US influence in the Caribbean?';
+        this.state.subreddit = 'r/AskTheCaribbean';
+        this.state.researchQuestion = 'How do Caribbean Reddit users perceive and resist narratives of US influence in the region?';
+        this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) the distinction between \'influence\' and \'control/colonialism\' in Caribbean perspectives; (2) how Puerto Rico functions as a reference point for challenging statehood narratives; (3) the role of sovereignty and self-determination as core Caribbean values; (4) how historical knowledge (Monroe Doctrine, colonial history) shapes contemporary attitudes; (5) the intersection of race, immigration policy, and geopolitical power in Caribbean discourse.';
+      }
       Storage.save(this.state);
     }
 
-    threadContent.innerHTML =
-      '<div class="reddit-thread">' +
-        '<div class="reddit-header">' +
-          '<span class="reddit-sub">r/AskTheCaribbean</span>' +
-          '<span class="reddit-flair">Politics</span>' +
-          '<h2 class="reddit-title">How do you feel about the theories regarding US influence in the Caribbean?</h2>' +
-          '<span class="reddit-meta">Posted by u/Shonen_Fan &middot; 8 days ago</span>' +
-        '</div>' +
-        '<div class="reddit-post">' +
-          '<p>A common joke/theory is that Puerto Rico, Cuba, Trinidad and Tobago, and Guyana will become US states in the near future. How do you feel about such claims?</p>' +
-        '</div>' +
-        '<div class="reddit-comments">' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/BrentDavidTT</span>' +
-            '<span class="reddit-badge">Top 1% Commenter</span>' +
-            '<p>I really think most of you all are young and think relationships of political, economic and military conveniences between the US and the region are new!</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/Weekly-Cicada-8615</span>' +
-            '<p>T&amp;T just sick of the Venezuelan government bs lol</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/aguilasolige</span>' +
-            '<span class="reddit-badge">Top 1% Commenter</span>' +
-            '<p>All throughout history, superpowers always influence their neighbors, that\'s inevitable. The only thing smaller countries can do is try to benefit from it</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/NeoPrimitiveOasis</span>' +
-            '<p>More like colonies, not states.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/sunlit_elais</span>' +
-            '<p>Idiotic. The US is heavily anti-immigrant right now, and they are going to give a few million people at once the option to immigrate there with full vote rights? When Puerto Rico is right there and they still haven\'t allowed them the condition of state?</p>' +
-            '<p>Try colony or puppet state.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/happy_bluebird</span>' +
-            '<p>I don\'t think you know what &quot;joke&quot; or &quot;theory&quot; mean</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Awkward-Hulk</span>' +
-            '<p>History really fucked Cuba. Spain was stupidly repressive there, fueling the eventual wars of independence. Cuba could have easily been an autonomous community of Spain today - much like the Canary Islands*. But alas, that never happened.</p>' +
-            '<p>And then we got stuck with a dictator in the 1950s only to replace that dictator with another in 1959. That latest dictator then earned himself an embargo from the world\'s superpower. And the country has essentially regressed back to the 1800s now...</p>' +
-            '<p>*It\'s likely that the US would have invaded anyway, but a Spain with the support of the Cuban people wouldn\'t have been as easy of a target.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/frazbox</span>' +
-            '<p>Jokes on you; Puerto Rico is already America</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/QuirkyRefuse5645</span>' +
-            '<p>Not a state though, which is what OP said.</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/elRobRex</span>' +
-            '<p>The Supreme Court of the United States disagrees with you.</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/QuirkyRefuse5645</span>' +
-            '<p>The Supreme Court of the United States said Puerto Rico is a state? I hope you\'re just trolling because that is obviously nowhere close to being true.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/CarelessPangolin993</span>' +
-            '<p>It\'s certainly not a theory (assuming your usage of the term is in the non scientific sense). It\'s just a matter of fact. From the Monroe doctrine to the revival under trump (not that it ever went away) it\'s been this way for centuries. The recent expulsion of Cuban doctors across many Caribbean countries is due to U.S pressure and threats. They have halted countries upgrading their infrastructure because it involves Chinese equipment. They had Cuba under embargo and has assets in Haiti. So to suggest the U.S has influence would be underselling the state of affairs</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Tall_Pressure7042</span>' +
-            '<p>It is like LATAM. America needs happy clients, not rebels.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/TumbleweedSuper9930</span>' +
-            '<p>Looking at Education, infrastructure and crime under British rule and today, many people questioning home rule for TnT</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Weekly-Cicada-8615</span>' +
-            '<p>I see Guyana as more like a eu territory than to ever to become a US backed state since it the European who buy most of the oil.</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/TeachingSpiritual888</span>' +
-            '<p>Not eu territory.</p>' +
-            '<p>Guyana is like a neutral place, we sell to whoever. It just so happens that America and EU buy most of our oil.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Islandrocketman</span>' +
-            '<p>Who wants to give up their sovereignty? None of nations.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Genki-sama2</span>' +
-            '<p>I have seen an article giving the pros and cons of hands being a US satellite state, actually giving credence to it. I\'d say they\'re correct. Trinidad already halfway there</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/StrategyFlashy4526</span>' +
-            '<p>No credence to that notion. The trump administration has put great emphasis on removing brown and black people from the US. They will never give free entry to non- Europeans.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Cool_Bananaquit9</span>' +
-            '<p>I hope we don\'t become a state</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Own-Enthusiasm-2348</span>' +
-            '<p>As a Puerto Rican, all I want for the island is free economic trade with other countries so we can thrive. Instead...we have to depend on the USA for everything...I don\'t hate the USA, but historically you simply cannot deny the damage the USA has done to Puerto Rico.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Icy_Scar_1249</span>' +
-            '<p>I could see Cuba maybe happenning, but not the rest ever. PR is already a territory, and look how hard it\'s been to get them to Statehood, will never happen with TNT and Guyana unless they want to be colonies</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/catejeda</span>' +
-            '<p>False.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Em1-_-</span>' +
-            '<span class="reddit-badge">Top 1% Commenter</span>' +
-            '<p>Puerto Rico and Cuba belong to the Antillean Confederation, don\'t care about the other two, but PR gotta become independent first so Hostos can be returned to his motherland (As were his wishes) and the Antillean Confederation can begin.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/catsoncrack420</span>' +
-            '<p>Ridiculous. US has less to gain and more to lose. Now territories with autocracy, that I can see. Like Puerto Rico but we won\'t be granted citizenship. Just better access to work visas</p>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
+    threadContent.innerHTML = '<p style="color: var(--outline); text-align: center; padding: 32px;">Loading thread...</p>';
   },
 
   /**
@@ -381,12 +274,21 @@ const App = {
   greetStudent() {
     var self = this;
     AI.sendMessage(
-      '[SYSTEM: The session has just started. The student\'s ID is "' + this.state.studentId + '". The research question is: "' + this.state.researchQuestion + '". The thread being analysed is titled "' + this.state.threadTitle + '" from ' + this.state.subreddit + '. Please greet the student warmly and briefly explain the task.]'
+      '[SYSTEM: The session has just started. The student\'s ID is "' + this.state.studentId + '". The research question is: "' + this.state.researchQuestion + '". The thread being analysed is titled "' + this.state.threadTitle + '" from ' + this.state.subreddit + '. Please greet the student warmly, briefly explain the task, and then ask them which coding filter they would like to use for this session and why. List the available filters: In Vivo, Descriptive, Process, Initial, Emotion, Values, Evaluation, Versus, Structural, Holistic, Provisional. The student will select their filter from a dropdown that will appear below this chat.]'
     ).then(function(greeting) {
       self.addChatMessage('model', greeting);
+      // Show the filter selection bar after greeting
+      if (!self.state.selectedFilter) {
+        var filterBar = document.getElementById('filter-selection-bar');
+        if (filterBar) filterBar.style.display = 'flex';
+      }
     }).catch(function(err) {
       console.error('AI greeting failed:', err);
-      self.addChatMessage('model', 'Welcome! Today you will read a Reddit thread and practise qualitative coding. Take a few minutes to read the thread first, then start creating codes by selecting text. I\'m here if you need help.');
+      self.addChatMessage('model', 'Welcome! Today you will read a Reddit thread and practise qualitative coding. First, please choose a coding filter from the dropdown below. Then take a few minutes to read the thread and start creating codes by selecting text.');
+      if (!self.state.selectedFilter) {
+        var filterBar = document.getElementById('filter-selection-bar');
+        if (filterBar) filterBar.style.display = 'flex';
+      }
     });
   },
 
@@ -463,7 +365,7 @@ const App = {
   /**
    * Add a message to the chat display
    */
-  addChatMessage(role, text) {
+  addChatMessage(role, text, timestamp) {
     var container = document.getElementById('chat-messages');
     if (!container) return;
 
@@ -475,6 +377,16 @@ const App = {
     bubble.textContent = text;
 
     msg.appendChild(bubble);
+
+    // Add timestamp
+    var ts = timestamp || new Date().toISOString();
+    var timeEl = document.createElement('span');
+    timeEl.className = 'chat-timestamp';
+    var d = new Date(ts);
+    timeEl.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    timeEl.title = d.toLocaleString();
+    msg.appendChild(timeEl);
+
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
   },
@@ -512,8 +424,9 @@ const App = {
   restoreChat() {
     var self = this;
     this.state.conversationHistory.forEach(function(msg) {
-      if (msg.parts[0].text.indexOf('[SYSTEM:') === 0) return;
-      self.addChatMessage(msg.role === 'model' ? 'model' : 'user', msg.parts[0].text);
+      var text = msg.parts[0].text;
+      if (text.indexOf('[SYSTEM') === 0 || text.indexOf('[SILENT]') !== -1) return;
+      self.addChatMessage(msg.role === 'model' ? 'model' : 'user', msg.parts[0].text, msg.timestamp);
     });
   },
 
