@@ -1,10 +1,10 @@
 /**
  * config.js — API key configuration
  *
- * GEMINI_API_KEY: for the Generative Language API (AI tutor)
- * DRIVE_API_KEY:  for the Google Drive API (document fetching)
+ * Keys are entered by the instructor via the setup screen and
+ * saved to localStorage. They are never committed to the repo.
  */
 var CONFIG = {
-  GEMINI_API_KEY: 'AIzaSyDzrr_f-QsylDXRq4Z0UCBAsk4sBRX7XDc',
-  DRIVE_API_KEY: 'AIzaSyBDaCszfawWoriOdJdx_1K8oICUAyxaX2A'
+  GEMINI_API_KEY: '',
+  DRIVE_API_KEY: ''
 };

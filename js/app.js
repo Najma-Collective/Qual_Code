@@ -82,6 +82,14 @@ const App = {
         return;
       }
 
+      // Save API keys if provided
+      var geminiKey = document.getElementById('gemini-key-input');
+      var driveKey = document.getElementById('drive-key-input');
+      AI.saveApiKeys(
+        geminiKey ? geminiKey.value.trim() : '',
+        driveKey ? driveKey.value.trim() : ''
+      );
+
       self.state.studentId = studentId;
       self.state.documentUrl = docUrl;
       self.state.documentId = docId;
@@ -191,7 +199,7 @@ const App = {
     var docId = this.state.documentId;
     if (!docId) return;
 
-    var driveKey = (typeof CONFIG !== 'undefined' && CONFIG.DRIVE_API_KEY) ? CONFIG.DRIVE_API_KEY : AI.getApiKey();
+    var driveKey = AI.getDriveApiKey();
     if (!driveKey) {
       console.log('No API key available for Google Drive export. Check config.js.');
       return;

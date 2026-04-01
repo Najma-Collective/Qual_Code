@@ -11,13 +11,31 @@ var AI = {
   heartbeatIntervalMs: 60000, // 1 minute
 
   /**
-   * Get the API key from the embedded config
+   * Get the Gemini API key (localStorage first, then CONFIG fallback)
    */
   getApiKey: function() {
-    if (typeof CONFIG === 'undefined') return '';
-    if (CONFIG.GEMINI_API_KEY) return CONFIG.GEMINI_API_KEY;
-    if (CONFIG.API_KEY && CONFIG.API_KEY !== 'YOUR_API_KEY_HERE') return CONFIG.API_KEY;
+    var saved = localStorage.getItem('qualcode_gemini_key');
+    if (saved) return saved;
+    if (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_API_KEY) return CONFIG.GEMINI_API_KEY;
     return '';
+  },
+
+  /**
+   * Get the Drive API key (localStorage first, then CONFIG fallback)
+   */
+  getDriveApiKey: function() {
+    var saved = localStorage.getItem('qualcode_drive_key');
+    if (saved) return saved;
+    if (typeof CONFIG !== 'undefined' && CONFIG.DRIVE_API_KEY) return CONFIG.DRIVE_API_KEY;
+    return '';
+  },
+
+  /**
+   * Save API keys to localStorage
+   */
+  saveApiKeys: function(geminiKey, driveKey) {
+    if (geminiKey) localStorage.setItem('qualcode_gemini_key', geminiKey);
+    if (driveKey) localStorage.setItem('qualcode_drive_key', driveKey);
   },
 
   /**

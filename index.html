@@ -43,6 +43,29 @@
       </div>
       <p class="setup-card__hint">Paste a sharing link to your Google Doc (must be shared as "Anyone with the link can view").</p>
 
+      <div class="mdc-text-field mdc-text-field--outlined setup-field" id="gemini-key-field">
+        <input type="password" id="gemini-key-input" class="mdc-text-field__input" autocomplete="off" aria-label="Gemini API Key">
+        <div class="mdc-notched-outline">
+          <div class="mdc-notched-outline__leading"></div>
+          <div class="mdc-notched-outline__notch">
+            <label class="mdc-floating-label" for="gemini-key-input">Gemini API Key</label>
+          </div>
+          <div class="mdc-notched-outline__trailing"></div>
+        </div>
+      </div>
+
+      <div class="mdc-text-field mdc-text-field--outlined setup-field" id="drive-key-field">
+        <input type="password" id="drive-key-input" class="mdc-text-field__input" autocomplete="off" aria-label="Drive API Key">
+        <div class="mdc-notched-outline">
+          <div class="mdc-notched-outline__leading"></div>
+          <div class="mdc-notched-outline__notch">
+            <label class="mdc-floating-label" for="drive-key-input">Drive API Key</label>
+          </div>
+          <div class="mdc-notched-outline__trailing"></div>
+        </div>
+      </div>
+      <p class="setup-card__hint">API keys are saved on your device only.</p>
+
       <button id="btn-start" class="mdc-button mdc-button--raised setup-btn">
         <span class="mdc-button__ripple"></span>
         <span class="material-icons mdc-button__icon">play_arrow</span>
@@ -363,6 +386,13 @@
         });
       }
 
+      // Pre-fill API keys from localStorage
+      var savedGemini = localStorage.getItem('qualcode_gemini_key');
+      var savedDrive = localStorage.getItem('qualcode_drive_key');
+      var geminiInput = document.getElementById('gemini-key-input');
+      var driveInput = document.getElementById('drive-key-input');
+      if (savedGemini && geminiInput) geminiInput.value = savedGemini;
+      if (savedDrive && driveInput) driveInput.value = savedDrive;
     });
 
     // Sync codes list to desktop panel
