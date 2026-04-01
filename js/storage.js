@@ -15,7 +15,6 @@ const Storage = {
       researchQuestion: '',
       threadTitle: '',
       subreddit: '',
-      snapshotHtml: '',
       sessionStartTime: null,
       elapsedSeconds: 0,
       phase: 'setup', // setup | precoding | coding | followup | debrief | complete
