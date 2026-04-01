@@ -61,15 +61,21 @@ const App = {
     document.getElementById('setup-screen').classList.add('active');
     document.getElementById('main-app').classList.remove('active');
 
-    document.getElementById('btn-start').onclick = () => {
+    var self = this;
+    document.getElementById('btn-start').onclick = function() {
       var studentId = document.getElementById('student-id-input').value.trim();
       if (!studentId) {
-        this.showSnackbar('Please enter your Student ID.');
+        self.showSnackbar('Please enter your Student ID.');
         return;
       }
-      this.state.studentId = studentId;
-      Storage.save(this.state);
-      this.startSession(false);
+      // Save API key if provided
+      var apiKeyInput = document.getElementById('api-key-input');
+      if (apiKeyInput && apiKeyInput.value.trim()) {
+        AI.saveApiKey(apiKeyInput.value.trim());
+      }
+      self.state.studentId = studentId;
+      Storage.save(self.state);
+      self.startSession(false);
     };
   },
 
@@ -83,10 +89,17 @@ const App = {
     document.getElementById('setup-screen').classList.remove('active');
     document.getElementById('main-app').classList.add('active');
 
-    // 2. Load fallback thread content immediately (synchronous, always works)
+    // 2. Assign a random thread if not already set
+    if (!this.state.threadId) {
+      var threads = ['thread-01', 'thread-02'];
+      this.state.threadId = threads[Math.floor(Math.random() * threads.length)];
+      Storage.save(this.state);
+    }
+
+    // 3. Load fallback thread content immediately (synchronous, always works)
     this.loadFallbackThread();
 
-    // 3. Set up all UI handlers (synchronous — must never be blocked by network)
+    // 4. Set up all UI handlers (synchronous — must never be blocked by network)
     Coding.init();
     this.setupChatInput();
     this.setupDrawer();
@@ -130,6 +143,11 @@ const App = {
     if (isResume) {
       Coding.renderCodesList();
       this.restoreChat();
+      // Show filter bar if no filter selected yet
+      if (!this.state.selectedFilter) {
+        var filterBar = document.getElementById('filter-selection-bar');
+        if (filterBar) filterBar.style.display = 'flex';
+      }
     }
 
     // 6. Background: try to load the real thread (replaces fallback if successful)
@@ -140,6 +158,9 @@ const App = {
     if (!isResume) {
       this.greetStudent();
     }
+
+    // 8. Start AI heartbeat for agentic check-ins during pre-coding/coding
+    AI.startHeartbeat();
   },
 
   /**
@@ -148,8 +169,7 @@ const App = {
    */
   tryLoadThread() {
     var self = this;
-    var threadId = this.state.threadId || 'thread-01';
-    this.state.threadId = threadId;
+    var threadId = this.state.threadId;
 
     fetch('threads/' + threadId + '/metadata.json')
       .then(function(response) {
@@ -191,60 +211,23 @@ const App = {
     var threadContent = document.getElementById('thread-content');
     if (!threadContent) return;
 
-    // Set default metadata if not already set
+    // Set default metadata based on which thread is selected
     if (!this.state.threadTitle) {
-      this.state.threadTitle = "What's your favourite Caribbean dish?";
-      this.state.subreddit = 'r/AskCaribbean';
-      this.state.researchQuestion = 'How do participants in r/AskCaribbean construct and negotiate Caribbean culinary identity through food discourse?';
-      this.state.aiGuidance = 'Focus assessment on whether the student identifies cultural identity markers in food descriptions, recognises in-group/out-group dynamics in recipe attribution, and connects food practices to broader Caribbean cultural narratives.';
+      if (this.state.threadId === 'thread-02') {
+        this.state.threadTitle = 'How do people in the Caribbean feel about CARICOM today?';
+        this.state.subreddit = 'r/AskTheCaribbean';
+        this.state.researchQuestion = 'How do Caribbean nationals evaluate the effectiveness and relevance of CARICOM as a regional institution, and what tensions emerge between national sovereignty and regional integration?';
+        this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) the tension between CARICOM\'s original purpose as a trade agreement and expectations for EU-style integration; (2) nationalist attitudes as barriers to freedom of movement and deeper integration; (3) the distinction between CARICOM and CSME that commenters raise; (4) concrete institutional achievements (CXC, UWI, CDEMA, CCJ) versus perceived failures; (5) how different national perspectives (Guyanese, Dominican, Trinidadian, Barbadian) shape attitudes toward CARICOM; (6) the contested inclusion of Haiti and the DR as revealing fault lines in Caribbean identity and solidarity.';
+      } else {
+        this.state.threadTitle = 'How do you feel about the theories regarding US influence in the Caribbean?';
+        this.state.subreddit = 'r/AskTheCaribbean';
+        this.state.researchQuestion = 'How do Caribbean Reddit users perceive and resist narratives of US influence in the region?';
+        this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) the distinction between \'influence\' and \'control/colonialism\' in Caribbean perspectives; (2) how Puerto Rico functions as a reference point for challenging statehood narratives; (3) the role of sovereignty and self-determination as core Caribbean values; (4) how historical knowledge (Monroe Doctrine, colonial history) shapes contemporary attitudes; (5) the intersection of race, immigration policy, and geopolitical power in Caribbean discourse.';
+      }
       Storage.save(this.state);
     }
 
-    threadContent.innerHTML =
-      '<div class="reddit-thread">' +
-        '<div class="reddit-header">' +
-          '<span class="reddit-sub">' + this.escapeHtml(this.state.subreddit) + '</span>' +
-          '<h2 class="reddit-title">' + this.escapeHtml(this.state.threadTitle) + '</h2>' +
-          '<span class="reddit-meta">Posted by u/caribbeanfoodie42 &middot; 3 months ago</span>' +
-        '</div>' +
-        '<div class="reddit-post">' +
-          '<p>Hey everyone! I\'m curious about what dishes make you feel most connected to your Caribbean identity. What\'s the one dish that screams "home" for you?</p>' +
-        '</div>' +
-        '<div class="reddit-comments">' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/trini_pride</span>' +
-            '<p>Pelau, no question. My grandmother used to make it every Sunday. The way the rice gets that brown colour from the caramelised sugar... there\'s nothing like it. I always feel proud when someone mentions our pelau because it\'s uniquely ours.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/jamaicanroots</span>' +
-            '<p>For me it\'s ackee and saltfish. My mother learned it from her mother, who learned from her grandmother. My grandmother\'s recipe, passed down from slavery days, uses scotch bonnet in a way that nobody else does. When I cook it abroad, the smell takes me straight back to Kingston.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/haitiankreyol</span>' +
-            '<p>Griot with pikliz. Every celebration, every family gathering. You can\'t be Haitian without griot. When I moved to Montreal, the first thing I did was find a Haitian restaurant. The food is how we stay connected. Li nan san nou \u2014 it\'s in our blood.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/bajan_queen</span>' +
-            '<p>Cou-cou and flying fish. But honestly? I think the younger generation is losing these recipes. My niece asked me what cou-cou was last week. That hurt. We need to write these things down before they disappear. The tradition vs modernity struggle is real in Barbados right now.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/guyanese_diaspora</span>' +
-            '<p>Pepperpot. It\'s the taste of Christmas morning. My father says the pot should never be empty \u2014 you just keep adding to it. There\'s something beautiful about a dish that literally carries the flavours of yesterday into today. It\'s history in a pot.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/cuban_in_miami</span>' +
-            '<p>Ropa vieja. The name means "old clothes" but the taste is anything but old. I\'ve been making it differently from my abuela though. She would be horrified that I use a pressure cooker. But I keep her sofrito recipe exactly the same. Some things you don\'t change. That\'s the compromise \u2014 you adapt the method but keep the soul.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/dominican_york</span>' +
-            '<p>Mang\u00fa con los tres golpes. Every single morning. People think Dominican food is simple but there\'s so much technique in getting the mang\u00fa right. Too many plantains and it\'s heavy, too few and it\'s just mush. My t\u00eda says cooking is like life \u2014 balance is everything. I miss her kitchen so much sometimes it makes me cry.</p>' +
-          '</div>' +
-          '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/soca_soul</span>' +
-            '<p>I notice nobody mentioned how food at Carnival is different. The doubles you eat at 3am after playing mas is NOT the same as doubles from a regular vendor. There\'s magic in that context. The food tastes better because of where you are and who you\'re with. That\'s something outsiders never understand about Caribbean food culture \u2014 it\'s never just about the food.</p>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
+    threadContent.innerHTML = '<p style="color: var(--outline); text-align: center; padding: 32px;">Loading thread...</p>';
   },
 
   /**
@@ -291,12 +274,21 @@ const App = {
   greetStudent() {
     var self = this;
     AI.sendMessage(
-      '[SYSTEM: The session has just started. The student\'s ID is "' + this.state.studentId + '". The research question is: "' + this.state.researchQuestion + '". The thread being analysed is titled "' + this.state.threadTitle + '" from ' + this.state.subreddit + '. Please greet the student warmly and briefly explain the task.]'
+      '[SYSTEM: The session has just started. The student\'s ID is "' + this.state.studentId + '". The research question is: "' + this.state.researchQuestion + '". The thread being analysed is titled "' + this.state.threadTitle + '" from ' + this.state.subreddit + '. Please greet the student warmly, briefly explain the task, and then ask them which coding filter they would like to use for this session and why. List the available filters: In Vivo, Descriptive, Process, Initial, Emotion, Values, Evaluation, Versus, Structural, Holistic, Provisional. The student will select their filter from a dropdown that will appear below this chat.]'
     ).then(function(greeting) {
       self.addChatMessage('model', greeting);
+      // Show the filter selection bar after greeting
+      if (!self.state.selectedFilter) {
+        var filterBar = document.getElementById('filter-selection-bar');
+        if (filterBar) filterBar.style.display = 'flex';
+      }
     }).catch(function(err) {
       console.error('AI greeting failed:', err);
-      self.addChatMessage('model', 'Welcome! Today you will read a Reddit thread and practise qualitative coding. Take a few minutes to read the thread first, then start creating codes by selecting text. I\'m here if you need help.');
+      self.addChatMessage('model', 'Welcome! Today you will read a Reddit thread and practise qualitative coding. First, please choose a coding filter from the dropdown below. Then take a few minutes to read the thread and start creating codes by selecting text.');
+      if (!self.state.selectedFilter) {
+        var filterBar = document.getElementById('filter-selection-bar');
+        if (filterBar) filterBar.style.display = 'flex';
+      }
     });
   },
 
@@ -373,7 +365,7 @@ const App = {
   /**
    * Add a message to the chat display
    */
-  addChatMessage(role, text) {
+  addChatMessage(role, text, timestamp) {
     var container = document.getElementById('chat-messages');
     if (!container) return;
 
@@ -385,6 +377,16 @@ const App = {
     bubble.textContent = text;
 
     msg.appendChild(bubble);
+
+    // Add timestamp
+    var ts = timestamp || new Date().toISOString();
+    var timeEl = document.createElement('span');
+    timeEl.className = 'chat-timestamp';
+    var d = new Date(ts);
+    timeEl.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    timeEl.title = d.toLocaleString();
+    msg.appendChild(timeEl);
+
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
   },
@@ -422,8 +424,9 @@ const App = {
   restoreChat() {
     var self = this;
     this.state.conversationHistory.forEach(function(msg) {
-      if (msg.parts[0].text.indexOf('[SYSTEM:') === 0) return;
-      self.addChatMessage(msg.role === 'model' ? 'model' : 'user', msg.parts[0].text);
+      var text = msg.parts[0].text;
+      if (text.indexOf('[SYSTEM') === 0 || text.indexOf('[SILENT]') !== -1) return;
+      self.addChatMessage(msg.role === 'model' ? 'model' : 'user', msg.parts[0].text, msg.timestamp);
     });
   },
 
@@ -522,6 +525,7 @@ const App = {
    */
   endSession() {
     Timer.stop();
+    AI.stopHeartbeat();
     this.updatePhaseDisplay();
 
     var input = document.getElementById('chat-input');

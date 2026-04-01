@@ -5,93 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>QualCode — Qualitative Coding Exercise</title>
 
-  <!-- Material Icons -->
+  <!-- Material Design 3 -->
+  <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <!-- Roboto Font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
   <!-- App Styles -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-  <!-- ============================== -->
-  <!-- SETUP SCREEN                   -->
-  <!-- ============================== -->
+  <!-- ========== SETUP SCREEN ========== -->
   <div id="setup-screen" class="setup-screen active">
     <div class="setup-card">
       <h1 class="setup-card__title">QualCode</h1>
       <p class="setup-card__subtitle">Qualitative Coding Exercise</p>
-      <div class="text-field">
-        <input
-          type="text"
-          id="student-id-input"
-          class="text-field__input"
-          placeholder=" "
-          autocomplete="off"
-          aria-label="Student ID"
-        >
-        <label class="text-field__label" for="student-id-input">Enter your Student ID</label>
+
+      <div class="mdc-text-field mdc-text-field--outlined setup-field" id="student-id-field">
+        <input type="text" id="student-id-input" class="mdc-text-field__input" autocomplete="off" aria-label="Student ID">
+        <div class="mdc-notched-outline">
+          <div class="mdc-notched-outline__leading"></div>
+          <div class="mdc-notched-outline__notch">
+            <label class="mdc-floating-label" for="student-id-input">Student ID</label>
+          </div>
+          <div class="mdc-notched-outline__trailing"></div>
+        </div>
       </div>
-      <button id="btn-start" class="btn-primary" aria-label="Start session">
-        <span class="material-icons">play_arrow</span>
-        Start Session
+
+      <div class="mdc-text-field mdc-text-field--outlined setup-field" id="api-key-field">
+        <input type="password" id="api-key-input" class="mdc-text-field__input" autocomplete="off" aria-label="Gemini API Key">
+        <div class="mdc-notched-outline">
+          <div class="mdc-notched-outline__leading"></div>
+          <div class="mdc-notched-outline__notch">
+            <label class="mdc-floating-label" for="api-key-input">Gemini API Key</label>
+          </div>
+          <div class="mdc-notched-outline__trailing"></div>
+        </div>
+      </div>
+      <p class="setup-card__hint">The AI key is saved on your device only, not in the code.</p>
+
+      <button id="btn-start" class="mdc-button mdc-button--raised setup-btn">
+        <span class="mdc-button__ripple"></span>
+        <span class="material-icons mdc-button__icon">play_arrow</span>
+        <span class="mdc-button__label">Start Session</span>
       </button>
     </div>
   </div>
 
-  <!-- ============================== -->
-  <!-- RESUME DIALOG                  -->
-  <!-- ============================== -->
-  <div id="resume-dialog" class="resume-dialog" role="dialog" aria-modal="true" aria-label="Resume session">
+  <!-- ========== RESUME DIALOG ========== -->
+  <div id="resume-dialog" class="resume-dialog" role="dialog" aria-modal="true">
     <div class="resume-card">
-      <span class="material-icons">restore</span>
+      <span class="material-icons resume-card__icon">restore</span>
       <h2 class="resume-card__title">Resume Previous Session?</h2>
       <div class="resume-card__info">
         <p>Student ID: <strong id="resume-student-id"></strong></p>
         <p id="resume-elapsed"></p>
       </div>
       <div class="resume-card__actions">
-        <button id="btn-resume" class="btn-primary">Resume Session</button>
-        <button id="btn-new-session" class="btn-secondary">Start New Session</button>
+        <button id="btn-resume" class="mdc-button mdc-button--raised">
+          <span class="mdc-button__ripple"></span>
+          <span class="mdc-button__label">Resume Session</span>
+        </button>
+        <button id="btn-new-session" class="mdc-button mdc-button--outlined">
+          <span class="mdc-button__ripple"></span>
+          <span class="mdc-button__label">Start New Session</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- ============================== -->
-  <!-- MAIN APP                       -->
-  <!-- ============================== -->
+  <!-- ========== MAIN APP ========== -->
   <div id="main-app" class="main-app">
 
     <!-- Top App Bar -->
-    <header class="app-bar" role="banner">
-      <button id="btn-menu" class="app-bar__menu" aria-label="Open codes panel">
-        <span class="material-icons">menu</span>
-      </button>
-      <span class="app-bar__title">QualCode</span>
-      <span class="app-bar__phase" id="phase-display" aria-live="polite">Setup</span>
-      <span class="app-bar__timer" id="timer-display" aria-label="Time remaining">20:00</span>
-      <span id="timer-aria" class="sr-only" aria-live="polite" role="timer"></span>
-      <div class="app-bar__actions">
-        <button id="btn-export" aria-label="Export PDF">
-          <span class="material-icons">download</span>
-        </button>
-        <button id="btn-settings" aria-label="Settings">
-          <span class="material-icons">settings</span>
-        </button>
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed app-bar" id="app-bar">
+      <div class="mdc-top-app-bar__row">
+        <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+          <button id="btn-menu" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" aria-label="Open codes panel">menu</button>
+          <span class="mdc-top-app-bar__title">QualCode</span>
+        </section>
+        <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
+          <span class="app-bar__phase mdc-chip" id="phase-display">Setup</span>
+          <span class="app-bar__timer" id="timer-display" role="timer" aria-label="Time remaining">20:00</span>
+          <span id="timer-aria" class="sr-only" aria-live="polite" role="timer"></span>
+          <button id="btn-export" class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Export PDF" style="display:none;">download</button>
+          <button id="btn-settings" class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Settings">settings</button>
+        </section>
       </div>
     </header>
 
-    <!-- Content Area -->
-    <div class="content-area">
+    <!-- Content Area (below fixed app bar) -->
+    <div class="content-area mdc-top-app-bar--fixed-adjust">
 
       <!-- Thread Pane -->
-      <div class="thread-pane" role="region" aria-label="Reddit thread">
-        <div class="research-question-bar">
+      <div class="thread-pane" id="thread-pane" role="region" aria-label="Reddit thread">
+        <div class="research-question-bar mdc-card">
           <div class="research-question-bar__label">Research Question</div>
           <div class="research-question-bar__text" id="research-question-text">Loading...</div>
         </div>
         <div id="thread-content">
-          <!-- Thread HTML loaded here -->
           <p style="color: var(--outline); text-align: center; padding: 32px;">Loading thread...</p>
         </div>
       </div>
@@ -105,167 +116,187 @@
       <!-- Chat Pane -->
       <div class="chat-pane" role="region" aria-label="AI tutor chat">
         <div class="chat-messages" id="chat-messages" role="log" aria-live="polite"></div>
+
+        <!-- Filter selection banner (shown until student picks a filter) -->
+        <div id="filter-selection-bar" class="filter-selection-bar" style="display:none;">
+          <label class="filter-selection-bar__label" for="session-filter-select">Select your coding filter:</label>
+          <select id="session-filter-select" class="code-filter-native-select" aria-label="Session coding filter">
+            <option value="">Choose a filter...</option>
+            <option value="In Vivo">In Vivo — participant's own words</option>
+            <option value="Descriptive">Descriptive — summarise the topic</option>
+            <option value="Process">Process — actions with -ing words</option>
+            <option value="Initial">Initial — open, exploratory coding</option>
+            <option value="Emotion">Emotion — expressed or inferred emotions</option>
+            <option value="Values">Values — beliefs and attitudes</option>
+            <option value="Evaluation">Evaluation — evaluative judgments</option>
+            <option value="Versus">Versus — dichotomies and conflicts</option>
+            <option value="Structural">Structural — relevance to research question</option>
+            <option value="Holistic">Holistic — single code for a large unit</option>
+            <option value="Provisional">Provisional — pre-established code list</option>
+          </select>
+          <div class="filter-selection-bar__help" id="setup-filter-help"></div>
+        </div>
+
         <div class="chat-input-bar">
-          <textarea
-            id="chat-input"
-            rows="1"
-            placeholder="Type a message..."
-            aria-label="Chat message input"
-          ></textarea>
-          <button id="btn-send" class="btn-send" aria-label="Send message">
-            <span class="material-icons">send</span>
+          <textarea id="chat-input" rows="1" placeholder="Type a message..." aria-label="Chat message input"></textarea>
+          <button id="btn-send" class="mdc-fab mdc-fab--mini btn-send" aria-label="Send message">
+            <span class="material-icons mdc-fab__icon">send</span>
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ============================== -->
-  <!-- FLOATING ANNOTATION TOOLBAR    -->
-  <!-- ============================== -->
-  <div id="annotation-toolbar" class="annotation-toolbar" role="toolbar" aria-label="Annotation tools">
-    <button id="btn-bold" aria-label="Bold" title="Bold">
+  <!-- ========== FLOATING ANNOTATION TOOLBAR ========== -->
+  <div id="annotation-toolbar" class="annotation-toolbar mdc-elevation--z8" role="toolbar" aria-label="Annotation tools">
+    <button id="btn-bold" class="mdc-icon-button" aria-label="Bold" title="Bold">
       <span class="material-icons">format_bold</span>
     </button>
-    <button id="btn-underline" aria-label="Underline" title="Underline">
+    <button id="btn-underline" class="mdc-icon-button" aria-label="Underline" title="Underline">
       <span class="material-icons">format_underlined</span>
     </button>
-    <div class="divider"></div>
-    <button id="btn-highlight-yellow" aria-label="Highlight yellow" title="Highlight yellow">
+    <div class="toolbar-divider"></div>
+    <button id="btn-highlight-yellow" class="mdc-icon-button" aria-label="Highlight yellow" title="Highlight yellow">
       <span class="colour-dot" style="background: #FDEAA8;"></span>
     </button>
-    <button id="btn-highlight-green" aria-label="Highlight green" title="Highlight green">
+    <button id="btn-highlight-green" class="mdc-icon-button" aria-label="Highlight green" title="Highlight green">
       <span class="colour-dot" style="background: #A8D8B9;"></span>
     </button>
-    <button id="btn-highlight-pink" aria-label="Highlight pink" title="Highlight pink">
+    <button id="btn-highlight-pink" class="mdc-icon-button" aria-label="Highlight pink" title="Highlight pink">
       <span class="colour-dot" style="background: #F8B4C8;"></span>
     </button>
-    <button id="btn-highlight-blue" aria-label="Highlight blue" title="Highlight blue">
+    <button id="btn-highlight-blue" class="mdc-icon-button" aria-label="Highlight blue" title="Highlight blue">
       <span class="colour-dot" style="background: #A8C8F0;"></span>
     </button>
-    <div class="divider"></div>
-    <button id="btn-create-code" class="btn-create-code-toolbar" aria-label="Create code from selection">
-      <span class="material-icons" style="font-size: 16px; margin-right: 4px;">add</span>
-      Code
+    <div class="toolbar-divider"></div>
+    <button id="btn-create-code" class="mdc-button mdc-button--raised btn-create-code-toolbar" aria-label="Create code from selection">
+      <span class="mdc-button__ripple"></span>
+      <span class="material-icons mdc-button__icon" style="font-size:16px;">add</span>
+      <span class="mdc-button__label">Code</span>
     </button>
   </div>
 
-  <!-- ============================== -->
-  <!-- CODE CREATION MODAL            -->
-  <!-- ============================== -->
+  <!-- ========== CODE CREATION MODAL ========== -->
   <div id="code-modal" class="code-modal-overlay" role="dialog" aria-modal="true" aria-label="Create code">
-    <div class="code-modal">
+    <div class="code-modal mdc-card mdc-elevation--z16">
       <h2 class="code-modal__title">Create Code</h2>
-
       <div class="code-modal__selected-text" id="code-selected-text"></div>
 
-      <label class="code-modal__label" for="code-label-input">Code Label</label>
-      <div class="text-field">
-        <input
-          type="text"
-          id="code-label-input"
-          class="text-field__input"
-          placeholder="e.g., Cultural Pride, Nostalgia..."
-          aria-label="Code label"
-        >
+      <div class="mdc-text-field mdc-text-field--outlined code-modal-field" id="code-label-field">
+        <input type="text" id="code-label-input" class="mdc-text-field__input" aria-label="Code label">
+        <div class="mdc-notched-outline">
+          <div class="mdc-notched-outline__leading"></div>
+          <div class="mdc-notched-outline__notch">
+            <label class="mdc-floating-label" for="code-label-input">Code Label</label>
+          </div>
+          <div class="mdc-notched-outline__trailing"></div>
+        </div>
       </div>
 
-      <label class="code-modal__label" for="code-filter-select">Coding Filter</label>
-      <select id="code-filter-select" aria-label="Coding filter">
+      <div class="code-modal__session-filter" id="code-modal-filter-display">
+        <span class="code-modal__filter-label">Coding Filter:</span>
+        <span class="code-modal__filter-value" id="code-filter-value"></span>
+      </div>
+      <!-- Hidden select preserved for data compatibility -->
+      <select id="code-filter-select" class="code-filter-native-select" aria-label="Coding filter" style="display:none;">
         <option value="">Select a coding filter...</option>
-        <option value="In Vivo">In Vivo — Participant's own words</option>
-        <option value="Descriptive">Descriptive — Topic summary</option>
-        <option value="Process">Process — Actions/processes (-ing words)</option>
-        <option value="Initial">Initial — Open, exploratory coding</option>
-        <option value="Emotion">Emotion — Emotions expressed or inferred</option>
-        <option value="Values">Values — Attitudes and beliefs</option>
-        <option value="Evaluation">Evaluation — Evaluative judgments</option>
-        <option value="Versus">Versus — Dichotomies and conflicts</option>
-        <option value="Structural">Structural — Relevance to research question</option>
-        <option value="Holistic">Holistic — Single code for large unit</option>
-        <option value="Provisional">Provisional — Pre-established code list</option>
+        <option value="In Vivo">In Vivo</option>
+        <option value="Descriptive">Descriptive</option>
+        <option value="Process">Process</option>
+        <option value="Initial">Initial</option>
+        <option value="Emotion">Emotion</option>
+        <option value="Values">Values</option>
+        <option value="Evaluation">Evaluation</option>
+        <option value="Versus">Versus</option>
+        <option value="Structural">Structural</option>
+        <option value="Holistic">Holistic</option>
+        <option value="Provisional">Provisional</option>
       </select>
       <div class="filter-help" id="filter-help"></div>
 
-      <label class="code-modal__label" for="code-memo-input">Memo</label>
-      <textarea
-        id="code-memo-input"
-        placeholder="Explain your thinking. Why did you choose this code? What does it tell you about the data? How does it connect to the research question or your own experience?"
-        aria-label="Analytical memo"
-      ></textarea>
+      <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea code-modal-field" id="code-memo-field">
+        <textarea id="code-memo-input" class="mdc-text-field__input" rows="4" aria-label="Analytical memo"></textarea>
+        <div class="mdc-notched-outline">
+          <div class="mdc-notched-outline__leading"></div>
+          <div class="mdc-notched-outline__notch">
+            <label class="mdc-floating-label" for="code-memo-input">Memo</label>
+          </div>
+          <div class="mdc-notched-outline__trailing"></div>
+        </div>
+      </div>
 
       <div class="code-modal__actions">
-        <button id="btn-cancel-code" class="btn-secondary">Cancel</button>
-        <button id="btn-save-code" class="btn-primary">Save Code</button>
+        <button id="btn-cancel-code" class="mdc-button mdc-button--outlined">
+          <span class="mdc-button__ripple"></span>
+          <span class="mdc-button__label">Cancel</span>
+        </button>
+        <button id="btn-save-code" class="mdc-button mdc-button--raised">
+          <span class="mdc-button__ripple"></span>
+          <span class="mdc-button__label">Save Code</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- ============================== -->
-  <!-- DELETE CONFIRMATION DIALOG     -->
-  <!-- ============================== -->
-  <div id="delete-dialog" class="dialog-overlay" role="alertdialog" aria-modal="true" aria-label="Confirm deletion">
-    <div class="dialog">
+  <!-- ========== DELETE CONFIRMATION ========== -->
+  <div id="delete-dialog" class="dialog-overlay" role="alertdialog" aria-modal="true">
+    <div class="dialog mdc-card mdc-elevation--z16">
       <h3 class="dialog__title">Delete Code?</h3>
-      <p class="dialog__body">This will permanently remove this code and its memo. This cannot be undone.</p>
+      <p class="dialog__body">This will permanently remove this code and its memo.</p>
       <div class="dialog__actions">
-        <button id="btn-cancel-delete" class="btn-secondary">Cancel</button>
-        <button id="btn-confirm-delete" class="btn-danger">Delete</button>
+        <button id="btn-cancel-delete" class="mdc-button">
+          <span class="mdc-button__ripple"></span>
+          <span class="mdc-button__label">Cancel</span>
+        </button>
+        <button id="btn-confirm-delete" class="mdc-button mdc-button--raised btn-danger">
+          <span class="mdc-button__ripple"></span>
+          <span class="mdc-button__label">Delete</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- ============================== -->
-  <!-- CODES DRAWER (Mobile)          -->
-  <!-- ============================== -->
+  <!-- ========== CODES DRAWER (Mobile) ========== -->
   <div id="drawer-scrim" class="drawer-scrim"></div>
-  <aside id="codes-drawer" class="codes-drawer" role="complementary" aria-label="Codes panel">
+  <aside id="codes-drawer" class="codes-drawer mdc-elevation--z16" role="complementary" aria-label="Codes panel">
     <div class="codes-drawer__header">
       <span class="codes-drawer__title">My Codes</span>
-      <button class="app-bar__menu" onclick="document.getElementById('codes-drawer').classList.remove('open'); document.getElementById('drawer-scrim').classList.remove('open');" aria-label="Close codes panel">
+      <button class="mdc-icon-button" onclick="document.getElementById('codes-drawer').classList.remove('open'); document.getElementById('drawer-scrim').classList.remove('open');" aria-label="Close">
         <span class="material-icons">close</span>
       </button>
     </div>
     <div class="codes-drawer__content" id="codes-list"></div>
   </aside>
 
-  <!-- ============================== -->
-  <!-- SETTINGS PANEL                 -->
-  <!-- ============================== -->
-  <div id="settings-panel" class="settings-panel" role="complementary" aria-label="Settings">
+  <!-- ========== SETTINGS PANEL ========== -->
+  <div id="settings-panel" class="settings-panel mdc-elevation--z8" role="complementary" aria-label="Settings">
     <h2 class="settings-panel__title">Settings</h2>
-
     <div class="settings-panel__item">
       <span class="settings-panel__label">Current Model</span>
       <span class="settings-panel__value" id="current-model">Loading...</span>
       <select id="model-select" aria-label="Select AI model"></select>
     </div>
-
     <div class="settings-panel__item">
       <span class="settings-panel__label">Student ID</span>
       <span class="settings-panel__value" id="settings-student-id">—</span>
     </div>
-
     <div class="settings-panel__item">
       <span class="settings-panel__label">Thread</span>
       <span class="settings-panel__value" id="settings-thread">—</span>
     </div>
   </div>
 
-  <!-- ============================== -->
-  <!-- SNACKBAR                       -->
-  <!-- ============================== -->
+  <!-- ========== SNACKBAR ========== -->
   <div id="snackbar" class="mdc-snackbar" role="status" aria-live="polite">
-    <span class="mdc-snackbar__label"></span>
+    <div class="mdc-snackbar__surface">
+      <div class="mdc-snackbar__label"></div>
+    </div>
   </div>
 
-  <!-- ============================== -->
-  <!-- SCRIPTS                        -->
-  <!-- ============================== -->
-  <!-- jsPDF for PDF export -->
+  <!-- ========== SCRIPTS ========== -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
-  <!-- App modules (order matters) -->
   <script src="js/storage.js"></script>
   <script src="js/timer.js"></script>
   <script src="js/ai.js"></script>
@@ -273,42 +304,85 @@
   <script src="js/export.js"></script>
   <script src="js/app.js"></script>
 
-  <!-- Filter help tooltip logic -->
   <script>
-    document.getElementById('code-filter-select').addEventListener('change', function() {
-      var helpEl = document.getElementById('filter-help');
-      var descriptions = {
-        'In Vivo': "Uses the participant's own words or short phrases as the code. Preserves the original voice.",
+    // Initialise MDC components after DOM and MDC library are ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialise text fields
+      document.querySelectorAll('.mdc-text-field').forEach(function(el) {
+        mdc.textField.MDCTextField.attachTo(el);
+      });
+      // Initialise buttons with ripple
+      document.querySelectorAll('.mdc-button').forEach(function(el) {
+        mdc.ripple.MDCRipple.attachTo(el);
+      });
+      document.querySelectorAll('.mdc-icon-button').forEach(function(el) {
+        var r = mdc.ripple.MDCRipple.attachTo(el);
+        r.unbounded = true;
+      });
+      document.querySelectorAll('.mdc-fab').forEach(function(el) {
+        mdc.ripple.MDCRipple.attachTo(el);
+      });
+
+      // Filter selection help tooltip (in-app bar)
+      var filterDescriptions = {
+        'In Vivo': "Uses the participant's own words as the code. Preserves the original voice.",
         'Descriptive': 'Summarises the topic of a passage in a word or short phrase.',
         'Process': 'Uses gerunds (-ing words) to capture actions or processes.',
-        'Initial': 'Open, exploratory coding. Used in grounded theory as a first pass. Stay close to the data.',
-        'Emotion': 'Labels the emotions expressed, recalled, or inferred from the data.',
+        'Initial': 'Open, exploratory coding. Stay close to the data.',
+        'Emotion': 'Labels the emotions expressed or inferred from the data.',
         'Values': 'Captures values, attitudes, and beliefs reflected in the data.',
         'Evaluation': 'Assigns evaluative judgments to the data.',
-        'Versus': 'Identifies dichotomies, conflicts, or binary oppositions in the data.',
+        'Versus': 'Identifies dichotomies, conflicts, or binary oppositions.',
         'Structural': 'Codes data according to its relevance to the research question.',
         'Holistic': 'Applies a single code to a large unit of data. Captures the gist.',
-        'Provisional': 'Starts from a pre-established list of codes derived from the literature.'
+        'Provisional': 'Starts from a pre-established list of codes, then modifies as needed.'
       };
-      helpEl.textContent = descriptions[this.value] || '';
+      var filterSelect = document.getElementById('session-filter-select');
+      if (filterSelect) {
+        filterSelect.addEventListener('change', function() {
+          var helpEl = document.getElementById('setup-filter-help');
+          if (helpEl) helpEl.textContent = filterDescriptions[this.value] || '';
+          // Save the selected filter to state
+          if (this.value && App.state) {
+            App.state.selectedFilter = this.value;
+            Storage.save(App.state);
+            // Notify AI of the filter choice
+            var filterBar = document.getElementById('filter-selection-bar');
+            if (filterBar) filterBar.style.display = 'none';
+            // Send filter choice as a user message
+            App.addChatMessage('user', 'I choose the ' + this.value + ' coding filter.');
+            App.showTypingIndicator();
+            AI.sendMessage('I choose the ' + this.value + ' coding filter.').then(function(response) {
+              App.hideTypingIndicator();
+              App.addChatMessage('model', response);
+            }).catch(function() {
+              App.hideTypingIndicator();
+            });
+          }
+        });
+      }
+
+      // Pre-fill API key if previously saved
+      if (AI.loadApiKey()) {
+        var apiInput = document.getElementById('api-key-input');
+        if (apiInput) apiInput.value = AI.apiKey;
+      }
     });
 
-    // Sync codes list to both mobile drawer and desktop panel
-    var origRender = Coding.renderCodesList;
+    // Sync codes list to desktop panel
+    var _origRender = Coding.renderCodesList;
     Coding.renderCodesList = function() {
-      origRender.call(Coding);
+      _origRender.call(Coding);
       var desktopList = document.getElementById('codes-list-desktop');
       var mobileList = document.getElementById('codes-list');
       if (desktopList && mobileList) {
         desktopList.innerHTML = mobileList.innerHTML;
       }
-      // Update settings display
-      var settingsId = document.getElementById('settings-student-id');
-      if (settingsId && App.state) settingsId.textContent = App.state.studentId || '—';
-      var settingsThread = document.getElementById('settings-thread');
-      if (settingsThread && App.state) settingsThread.textContent = App.state.threadTitle || '—';
+      var sid = document.getElementById('settings-student-id');
+      if (sid && App.state) sid.textContent = App.state.studentId || '—';
+      var st = document.getElementById('settings-thread');
+      if (st && App.state) st.textContent = App.state.threadTitle || '—';
     };
   </script>
-
 </body>
 </html>
