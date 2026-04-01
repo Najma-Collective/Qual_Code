@@ -196,6 +196,7 @@ const App = {
         var threadContent = document.getElementById('thread-content');
         if (threadContent && html.length < 500000) {
           threadContent.innerHTML = html;
+          self.rewriteThreadAssetUrls(threadContent, threadId);
         }
       })
       .catch(function(err) {
@@ -228,6 +229,46 @@ const App = {
     }
 
     threadContent.innerHTML = '<p style="color: var(--outline); text-align: center; padding: 32px;">Loading thread...</p>';
+  },
+
+  /**
+   * Rewrites relative asset URLs in injected thread HTML.
+   * Thread HTML is fetched and injected into the main app document, so
+   * paths like `images/foo.jpg` must be resolved against `threads/{id}/`.
+   */
+  rewriteThreadAssetUrls(container, threadId) {
+    if (!container || !threadId) return;
+
+    var basePath = 'threads/' + threadId + '/';
+    var attrTargets = [
+      { selector: '[src]', attr: 'src' },
+      { selector: '[href]', attr: 'href' },
+      { selector: '[poster]', attr: 'poster' }
+    ];
+
+    function isRelativeUrl(url) {
+      if (!url) return false;
+      var trimmed = url.trim();
+      return !(
+        trimmed.indexOf('http://') === 0 ||
+        trimmed.indexOf('https://') === 0 ||
+        trimmed.indexOf('//') === 0 ||
+        trimmed.indexOf('data:') === 0 ||
+        trimmed.indexOf('blob:') === 0 ||
+        trimmed.indexOf('#') === 0 ||
+        trimmed.indexOf('/') === 0 ||
+        trimmed.indexOf('threads/') === 0
+      );
+    }
+
+    attrTargets.forEach(function(target) {
+      var nodes = container.querySelectorAll(target.selector);
+      nodes.forEach(function(node) {
+        var current = node.getAttribute(target.attr);
+        if (!isRelativeUrl(current)) return;
+        node.setAttribute(target.attr, basePath + current.replace(/^\.\//, ''));
+      });
+    });
   },
 
   /**
