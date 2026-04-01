@@ -10,6 +10,7 @@ var Coding = {
   ],
   colourIndex: 0,
   codeColourMap: {},
+  activeSelectionWindow: null,
 
   /**
    * Coding filter definitions from Saldana
@@ -50,10 +51,26 @@ var Coding = {
     if (threadPane) {
       threadPane.addEventListener('mouseup', function(e) {
         // Small delay to let the selection finalise
-        setTimeout(function() { self.handleTextSelection(e); }, 10);
+        setTimeout(function() { self.handleTextSelection(e, window); }, 10);
       });
       threadPane.addEventListener('touchend', function(e) {
-        setTimeout(function() { self.handleTextSelection(e); }, 100);
+        setTimeout(function() { self.handleTextSelection(e, window); }, 100);
+      });
+    }
+
+    var snapshotFrame = document.getElementById('snapshot-frame');
+    if (snapshotFrame) {
+      snapshotFrame.addEventListener('load', function() {
+        var frameDoc = snapshotFrame.contentDocument;
+        var frameWin = snapshotFrame.contentWindow;
+        if (!frameDoc || !frameWin) return;
+
+        frameDoc.addEventListener('mouseup', function(e) {
+          setTimeout(function() { self.handleTextSelection(e, frameWin); }, 10);
+        });
+        frameDoc.addEventListener('touchend', function(e) {
+          setTimeout(function() { self.handleTextSelection(e, frameWin); }, 100);
+        });
       });
     }
 
@@ -68,11 +85,12 @@ var Coding = {
   /**
    * Handle text selection in the thread pane
    */
-  handleTextSelection: function(e) {
+  handleTextSelection: function(e, selectionWindow) {
     var toolbar = document.getElementById('annotation-toolbar');
     if (!toolbar) return;
 
-    var selection = window.getSelection();
+    var selWindow = selectionWindow || window;
+    var selection = selWindow.getSelection();
 
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
       // Don't hide if the user clicked on the toolbar itself
@@ -86,7 +104,7 @@ var Coding = {
     if (!threadPane) return;
 
     var anchorNode = selection.anchorNode;
-    if (!threadPane.contains(anchorNode)) {
+    if (selWindow === window && !threadPane.contains(anchorNode)) {
       toolbar.classList.remove('visible');
       return;
     }
@@ -96,10 +114,12 @@ var Coding = {
 
     var range = selection.getRangeAt(0);
     var rect = range.getBoundingClientRect();
+    var frame = document.getElementById('snapshot-frame');
+    var frameRect = frame ? frame.getBoundingClientRect() : null;
 
     // Position toolbar above the selection
-    var top = rect.top + window.scrollY - 56;
-    var left = rect.left + (rect.width / 2) - 120;
+    var top = rect.top + window.scrollY - 56 + (selWindow === window ? 0 : (frameRect ? frameRect.top : 0));
+    var left = rect.left + (rect.width / 2) - 120 + (selWindow === window ? 0 : (frameRect ? frameRect.left : 0));
 
     // Keep within viewport
     top = Math.max(60, top);
@@ -108,6 +128,7 @@ var Coding = {
     toolbar.style.top = top + 'px';
     toolbar.style.left = left + 'px';
     toolbar.classList.add('visible');
+    this.activeSelectionWindow = selWindow;
 
     // Store selected text for code creation
     toolbar.dataset.selectedText = selectedText;
@@ -117,11 +138,12 @@ var Coding = {
    * Apply annotation (bold, underline, or highlight colour)
    */
   applyAnnotation: function(type, colour) {
-    var selection = window.getSelection();
+    var selectionContext = this.activeSelectionWindow || window;
+    var selection = selectionContext.getSelection();
     if (!selection || selection.isCollapsed) return;
 
     var range = selection.getRangeAt(0);
-    var span = document.createElement('span');
+    var span = (selection.anchorNode && selection.anchorNode.ownerDocument || document).createElement('span');
 
     switch (type) {
       case 'bold':
@@ -263,10 +285,17 @@ var Coding = {
    * Highlight text in the thread pane
    */
   highlightTextInThread: function(text, colour) {
-    var threadContent = document.getElementById('thread-content');
+    var threadContent = null;
+    if (App.state.threadViewMode === 'snapshot') {
+      var frame = document.getElementById('snapshot-frame');
+      if (frame && frame.contentDocument) threadContent = frame.contentDocument.body;
+    } else {
+      threadContent = document.getElementById('thread-content');
+    }
     if (!threadContent) return;
 
-    var walker = document.createTreeWalker(threadContent, NodeFilter.SHOW_TEXT, null, false);
+    var doc = threadContent.ownerDocument || document;
+    var walker = doc.createTreeWalker(threadContent, NodeFilter.SHOW_TEXT, null, false);
     var node;
 
     while ((node = walker.nextNode())) {
