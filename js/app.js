@@ -195,7 +195,44 @@ const App = {
         // Only replace if the HTML looks like clean content (not a full page with <html> tags)
         var threadContent = document.getElementById('thread-content');
         if (threadContent && html.length < 500000) {
-          threadContent.innerHTML = html;
+          var threadBase = 'threads/' + threadId + '/';
+          var detached = document.createElement('div');
+          detached.innerHTML = html;
+
+          var isAbsoluteUrl = function(url) {
+            return /^(?:https?:|data:|blob:|\/|#|\/\/)/i.test(url || '');
+          };
+
+          detached.querySelectorAll('img[src], a[href]').forEach(function(el) {
+            var attrName = el.tagName === 'A' ? 'href' : 'src';
+            var attrValue = el.getAttribute(attrName);
+            if (!attrValue || isAbsoluteUrl(attrValue)) return;
+            el.setAttribute(attrName, threadBase + attrValue);
+          });
+
+          detached.querySelectorAll('source[srcset]').forEach(function(sourceEl) {
+            var srcset = sourceEl.getAttribute('srcset');
+            if (!srcset) return;
+
+            var normalizedSrcset = srcset
+              .split(',')
+              .map(function(entry) {
+                var candidate = entry.trim();
+                if (!candidate) return candidate;
+
+                var firstSpaceIndex = candidate.search(/\s/);
+                var candidateUrl = firstSpaceIndex === -1 ? candidate : candidate.slice(0, firstSpaceIndex);
+                var candidateDescriptor = firstSpaceIndex === -1 ? '' : candidate.slice(firstSpaceIndex);
+
+                if (isAbsoluteUrl(candidateUrl)) return candidate;
+                return threadBase + candidateUrl + candidateDescriptor;
+              })
+              .join(', ');
+
+            sourceEl.setAttribute('srcset', normalizedSrcset);
+          });
+
+          threadContent.innerHTML = detached.innerHTML;
         }
       })
       .catch(function(err) {
