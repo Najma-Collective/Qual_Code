@@ -215,8 +215,12 @@ var AI = {
 
     var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + this.selectedModel + ':generateContent?key=' + this.apiKey;
 
+    var cleanedHistory = conversationHistory.map(function(msg) {
+      return { role: msg.role, parts: msg.parts };
+    });
+
     var payload = {
-      contents: conversationHistory,
+      contents: cleanedHistory,
       systemInstruction: {
         parts: [{ text: this.buildSystemPrompt() }]
       },
