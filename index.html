@@ -31,17 +31,17 @@
         </div>
       </div>
 
-      <div class="mdc-text-field mdc-text-field--outlined setup-field" id="api-key-field">
-        <input type="password" id="api-key-input" class="mdc-text-field__input" autocomplete="off" aria-label="Gemini API Key">
+      <div class="mdc-text-field mdc-text-field--outlined setup-field" id="doc-url-field">
+        <input type="url" id="doc-url-input" class="mdc-text-field__input" autocomplete="off" aria-label="Google Doc URL">
         <div class="mdc-notched-outline">
           <div class="mdc-notched-outline__leading"></div>
           <div class="mdc-notched-outline__notch">
-            <label class="mdc-floating-label" for="api-key-input">Gemini API Key</label>
+            <label class="mdc-floating-label" for="doc-url-input">Google Doc URL</label>
           </div>
           <div class="mdc-notched-outline__trailing"></div>
         </div>
       </div>
-      <p class="setup-card__hint">The AI key is saved on your device only, not in the code.</p>
+      <p class="setup-card__hint">Paste a sharing link to your Google Doc (must be shared as "Anyone with the link can view").</p>
 
       <button id="btn-start" class="mdc-button mdc-button--raised setup-btn">
         <span class="mdc-button__ripple"></span>
@@ -96,29 +96,14 @@
     <!-- Content Area (below fixed app bar) -->
     <div class="content-area mdc-top-app-bar--fixed-adjust">
 
-      <!-- Thread Pane -->
-      <div class="thread-pane" id="thread-pane" role="region" aria-label="Reddit thread">
-        <div class="thread-view-controls mdc-card">
-          <label for="thread-view-mode">View:</label>
-          <select id="thread-view-mode" class="code-filter-native-select" aria-label="Thread view mode">
-            <option value="structured">Structured thread</option>
-            <option value="snapshot">Snapshot browser</option>
-          </select>
-          <label for="snapshot-select">Snapshot:</label>
-          <select id="snapshot-select" class="code-filter-native-select" aria-label="Snapshot source">
-            <option value="bwia">BWIA thread snapshot</option>
-            <option value="us-influence">US influence thread snapshot</option>
-          </select>
-        </div>
+      <!-- Document Pane -->
+      <div class="thread-pane" id="thread-pane" role="region" aria-label="Document">
         <div class="research-question-bar mdc-card">
           <div class="research-question-bar__label">Research Question</div>
           <div class="research-question-bar__text" id="research-question-text">Loading...</div>
         </div>
         <div id="thread-content">
-          <p style="color: var(--outline); text-align: center; padding: 32px;">Loading thread...</p>
-        </div>
-        <div id="snapshot-browser" class="snapshot-browser" style="display:none;">
-          <iframe id="snapshot-frame" class="snapshot-browser__frame" title="Reddit snapshot browser" sandbox="allow-same-origin"></iframe>
+          <p style="color: var(--outline); text-align: center; padding: 32px;">Paste a Google Doc URL in setup to load your document.</p>
         </div>
       </div>
 
@@ -296,7 +281,7 @@
       <span class="settings-panel__value" id="settings-student-id">—</span>
     </div>
     <div class="settings-panel__item">
-      <span class="settings-panel__label">Thread</span>
+      <span class="settings-panel__label">Document</span>
       <span class="settings-panel__value" id="settings-thread">—</span>
     </div>
   </div>
@@ -312,6 +297,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
+  <script src="config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/timer.js"></script>
   <script src="js/ai.js"></script>
@@ -377,11 +363,6 @@
         });
       }
 
-      // Pre-fill API key if previously saved
-      if (AI.loadApiKey()) {
-        var apiInput = document.getElementById('api-key-input');
-        if (apiInput) apiInput.value = AI.apiKey;
-      }
     });
 
     // Sync codes list to desktop panel
@@ -396,7 +377,7 @@
       var sid = document.getElementById('settings-student-id');
       if (sid && App.state) sid.textContent = App.state.studentId || '—';
       var st = document.getElementById('settings-thread');
-      if (st && App.state) st.textContent = App.state.threadTitle || '—';
+      if (st && App.state) st.textContent = App.state.documentTitle || '—';
     };
   </script>
 </body>

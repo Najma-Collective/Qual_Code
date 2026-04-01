@@ -58,22 +58,6 @@ var Coding = {
       });
     }
 
-    var snapshotFrame = document.getElementById('snapshot-frame');
-    if (snapshotFrame) {
-      snapshotFrame.addEventListener('load', function() {
-        var frameDoc = snapshotFrame.contentDocument;
-        var frameWin = snapshotFrame.contentWindow;
-        if (!frameDoc || !frameWin) return;
-
-        frameDoc.addEventListener('mouseup', function(e) {
-          setTimeout(function() { self.handleTextSelection(e, frameWin); }, 10);
-        });
-        frameDoc.addEventListener('touchend', function(e) {
-          setTimeout(function() { self.handleTextSelection(e, frameWin); }, 100);
-        });
-      });
-    }
-
     // Hide toolbar when clicking outside thread pane
     document.addEventListener('mousedown', function(e) {
       if (!toolbar.contains(e.target) && !threadPane.contains(e.target)) {
@@ -114,12 +98,10 @@ var Coding = {
 
     var range = selection.getRangeAt(0);
     var rect = range.getBoundingClientRect();
-    var frame = document.getElementById('snapshot-frame');
-    var frameRect = frame ? frame.getBoundingClientRect() : null;
 
     // Position toolbar above the selection
-    var top = rect.top + window.scrollY - 56 + (selWindow === window ? 0 : (frameRect ? frameRect.top : 0));
-    var left = rect.left + (rect.width / 2) - 120 + (selWindow === window ? 0 : (frameRect ? frameRect.left : 0));
+    var top = rect.top + window.scrollY - 56;
+    var left = rect.left + (rect.width / 2) - 120;
 
     // Keep within viewport
     top = Math.max(60, top);
@@ -285,13 +267,7 @@ var Coding = {
    * Highlight text in the thread pane
    */
   highlightTextInThread: function(text, colour) {
-    var threadContent = null;
-    if (App.state.threadViewMode === 'snapshot') {
-      var frame = document.getElementById('snapshot-frame');
-      if (frame && frame.contentDocument) threadContent = frame.contentDocument.body;
-    } else {
-      threadContent = document.getElementById('thread-content');
-    }
+    var threadContent = document.getElementById('thread-content');
     if (!threadContent) return;
 
     var doc = threadContent.ownerDocument || document;
@@ -326,7 +302,7 @@ var Coding = {
     if (!list) return;
 
     if (!App.state || App.state.codes.length === 0) {
-      list.innerHTML = '<div class="codes-empty"><span class="material-icons">code</span><p>No codes yet. Select text in the thread and tap "Code" to begin.</p></div>';
+      list.innerHTML = '<div class="codes-empty"><span class="material-icons">code</span><p>No codes yet. Select text in the document and tap "Code" to begin.</p></div>';
       return;
     }
 
