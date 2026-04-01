@@ -220,6 +220,31 @@ const App = {
     if (frame.getAttribute('src') !== path) {
       frame.setAttribute('src', path);
     }
+
+    if (!frame._cleanupBound) {
+      frame._cleanupBound = true;
+      frame.addEventListener('load', function() {
+        var doc = frame.contentDocument;
+        if (!doc) return;
+        if (doc.getElementById('qualcode-cleanup-css')) return;
+
+        var style = doc.createElement('style');
+        style.id = 'qualcode-cleanup-css';
+        style.textContent = [
+          'reddit-header-large, reddit-header-action-items, #reddit-header, nav, header { display: none !important; }',
+          'reddit-search-large, #search-input-desktop, [name="q"] { display: none !important; }',
+          '[data-testid="login-button"], [data-testid="signup-button"], .login-gate { display: none !important; }',
+          '[data-testid="cookie-policy-banner"], .cookie-infobar { display: none !important; }',
+          '.grecaptcha-badge { display: none !important; }',
+          '#right-sidebar-container, [data-testid="right-rail"], .sidebar { display: none !important; }',
+          '[name="QrCodePersistentButtonUpsell"], .bottom-bar { display: none !important; }',
+          '#credential_picker_container, .g_id_signin { display: none !important; }',
+          'shreddit-app { display: block !important; }',
+          'main, [slot="main"] { max-width: 100% !important; margin: 0 auto !important; }'
+        ].join('\n');
+        doc.head.appendChild(style);
+      });
+    }
   },
 
   /**
