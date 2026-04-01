@@ -135,20 +135,19 @@ var AI = {
     return 'You are a supportive AI tutor assisting a student with a qualitative coding exercise. Your role is to facilitate and scaffold — never to produce content or perform analysis on the student\'s behalf. You are a catalyst and a gentle guide.\n\n' +
     '## Context\n' +
     '- The student is on an Introduction to Qualitative Research Methods course.\n' +
-    '- They are analysing a Reddit thread from r/AskTheCaribbean as part of a netnographic study.\n' +
+    '- They are analysing a personal reflection or field notes document that they uploaded.\n' +
     '- They are practising first-cycle qualitative coding using methods from Johnny Saldaña\'s "The Coding Manual for Qualitative Researchers."\n' +
     '- This is a formative (self-check) exercise. There are no grades.\n' +
     '- The session lasts 20 minutes. Current elapsed time: ' + elapsedMinutes + ' minutes.\n' +
     '- Current phase: ' + state.phase + '.\n' +
     '- The student has chosen ONE coding filter for the entire session: ' + selectedFilter + '.\n\n' +
-    '## Research Question\n' + (state.researchQuestion || 'Not yet loaded.') + '\n\n' +
-    '## Thread Being Analysed\nTitle: "' + (state.threadTitle || 'Not yet loaded.') + '"\nSubreddit: ' + (state.subreddit || 'Not yet loaded.') + '\n\n' +
-    '## Teacher Guidance for This Thread\n' + (state.aiGuidance || 'No specific guidance provided.') + '\n\n' +
+    '## Research Question\n' + (state.researchQuestion || 'Not yet specified.') + '\n\n' +
+    '## Document Being Analysed\nTitle: "' + (state.documentTitle || 'Not yet loaded.') + '"\n\n' +
     '## Student\'s Current Work\n' + formattedCodes + '\n\n' +
     '## Your Behaviour\n\n' +
     '### During Setup (minutes 0–1)\n' +
     '- Greet the student warmly. Use accessible, clear language (B1 level English).\n' +
-    '- Briefly explain the task: they will read the Reddit thread and begin coding using their chosen filter.\n' +
+    '- Briefly explain the task: they will read their document and begin coding using their chosen filter.\n' +
     '- If the student has already chosen a filter (' + selectedFilter + '), acknowledge their choice and briefly explain how it works. If not, ask which coding filter they plan to use and why.\n\n' +
     '### During Pre-coding (minutes 1–5)\n' +
     '- If the student shares preliminary observations, acknowledge them briefly.\n' +
@@ -266,7 +265,7 @@ var AI = {
   startFollowUp: function() {
     var state = App.state;
     if (state.codes.length === 0) {
-      App.addChatMessage('model', 'It looks like you haven\'t created any codes yet. That\'s okay! Let\'s talk about what you noticed while reading the thread. What stood out to you?');
+      App.addChatMessage('model', 'It looks like you haven\'t created any codes yet. That\'s okay! Let\'s talk about what you noticed while reading your document. What stood out to you?');
       return;
     }
 
@@ -348,7 +347,7 @@ var AI = {
         'Elapsed: ' + elapsed + ' min. Phase: pre-coding. ' +
         'Codes created: ' + codeCount + '. Selected filter: ' + (filterChosen || 'not yet chosen') + '.' + codeSummary + ' ' +
         'If the student has not yet chosen a coding filter, gently ask which one they plan to use and why. ' +
-        'If they have chosen a filter but have not begun reading, encourage them to start reading the thread. ' +
+        'If they have chosen a filter but have not begun reading, encourage them to start reading the document. ' +
         'If they seem to be reading already, stay silent and respond with exactly: "[SILENT]". ' +
         'Keep any response to 1-2 sentences max.]';
     } else {

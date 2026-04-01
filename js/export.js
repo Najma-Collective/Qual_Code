@@ -110,8 +110,7 @@ const Export = {
     addSubtitle('Research Question');
     addBody('"' + (state.researchQuestion || 'Not available') + '"');
 
-    addLabel('Thread: ', '"' + (state.threadTitle || 'Not available') + '"');
-    addLabel('Source: ', state.subreddit || 'Not available');
+    addLabel('Document: ', '"' + (state.documentTitle || 'Not available') + '"');
 
     const usedFilters = Coding.getUsedFilters();
     if (usedFilters.length > 0) {

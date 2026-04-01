@@ -41,7 +41,19 @@
           <div class="mdc-notched-outline__trailing"></div>
         </div>
       </div>
-      <p class="setup-card__hint">The AI key is saved on your device only, not in the code.</p>
+      <p class="setup-card__hint">The AI key is saved on your device only, not in the code. Enable the Google Drive API in the same project for document access.</p>
+
+      <div class="mdc-text-field mdc-text-field--outlined setup-field" id="doc-url-field">
+        <input type="url" id="doc-url-input" class="mdc-text-field__input" autocomplete="off" aria-label="Google Doc URL">
+        <div class="mdc-notched-outline">
+          <div class="mdc-notched-outline__leading"></div>
+          <div class="mdc-notched-outline__notch">
+            <label class="mdc-floating-label" for="doc-url-input">Google Doc URL</label>
+          </div>
+          <div class="mdc-notched-outline__trailing"></div>
+        </div>
+      </div>
+      <p class="setup-card__hint">Paste a sharing link to your Google Doc (must be shared as "Anyone with the link can view").</p>
 
       <button id="btn-start" class="mdc-button mdc-button--raised setup-btn">
         <span class="mdc-button__ripple"></span>
@@ -96,29 +108,14 @@
     <!-- Content Area (below fixed app bar) -->
     <div class="content-area mdc-top-app-bar--fixed-adjust">
 
-      <!-- Thread Pane -->
-      <div class="thread-pane" id="thread-pane" role="region" aria-label="Reddit thread">
-        <div class="thread-view-controls mdc-card">
-          <label for="thread-view-mode">View:</label>
-          <select id="thread-view-mode" class="code-filter-native-select" aria-label="Thread view mode">
-            <option value="structured">Structured thread</option>
-            <option value="snapshot">Snapshot browser</option>
-          </select>
-          <label for="snapshot-select">Snapshot:</label>
-          <select id="snapshot-select" class="code-filter-native-select" aria-label="Snapshot source">
-            <option value="bwia">BWIA thread snapshot</option>
-            <option value="us-influence">US influence thread snapshot</option>
-          </select>
-        </div>
+      <!-- Document Pane -->
+      <div class="thread-pane" id="thread-pane" role="region" aria-label="Document">
         <div class="research-question-bar mdc-card">
           <div class="research-question-bar__label">Research Question</div>
           <div class="research-question-bar__text" id="research-question-text">Loading...</div>
         </div>
         <div id="thread-content">
-          <p style="color: var(--outline); text-align: center; padding: 32px;">Loading thread...</p>
-        </div>
-        <div id="snapshot-browser" class="snapshot-browser" style="display:none;">
-          <iframe id="snapshot-frame" class="snapshot-browser__frame" title="Reddit snapshot browser"></iframe>
+          <p style="color: var(--outline); text-align: center; padding: 32px;">Paste a Google Doc URL in setup to load your document.</p>
         </div>
       </div>
 
@@ -296,7 +293,7 @@
       <span class="settings-panel__value" id="settings-student-id">—</span>
     </div>
     <div class="settings-panel__item">
-      <span class="settings-panel__label">Thread</span>
+      <span class="settings-panel__label">Document</span>
       <span class="settings-panel__value" id="settings-thread">—</span>
     </div>
   </div>
@@ -396,7 +393,7 @@
       var sid = document.getElementById('settings-student-id');
       if (sid && App.state) sid.textContent = App.state.studentId || '—';
       var st = document.getElementById('settings-thread');
-      if (st && App.state) st.textContent = App.state.threadTitle || '—';
+      if (st && App.state) st.textContent = App.state.documentTitle || '—';
     };
   </script>
 </body>
