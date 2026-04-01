@@ -73,6 +73,11 @@ const App = {
       if (apiKeyInput && apiKeyInput.value.trim()) {
         AI.saveApiKey(apiKeyInput.value.trim());
       }
+      // Save session-wide coding filter
+      var filterSelect = document.getElementById('session-filter-select');
+      if (filterSelect && filterSelect.value) {
+        self.state.selectedFilter = filterSelect.value;
+      }
       self.state.studentId = studentId;
       Storage.save(self.state);
       self.startSession(false);
@@ -146,6 +151,9 @@ const App = {
     if (!isResume) {
       this.greetStudent();
     }
+
+    // 8. Start AI heartbeat for agentic check-ins during pre-coding/coding
+    AI.startHeartbeat();
   },
 
   /**
@@ -199,10 +207,10 @@ const App = {
 
     // Set default metadata if not already set
     if (!this.state.threadTitle) {
-      this.state.threadTitle = 'What are your guys thoughts on BWIA West Indies Airways when it was in service?';
+      this.state.threadTitle = 'How do you feel about the theories regarding US influence in the Caribbean?';
       this.state.subreddit = 'r/AskTheCaribbean';
-      this.state.researchQuestion = 'How do Reddit members signal Caribbean identity?';
-      this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) nostalgia as a vehicle for collective Caribbean identity construction; (2) the tension between colonial naming and post-independence identity; (3) how humour and affectionate nicknames function as in-group markers; (4) sensory memory as anchors for cultural belonging; (5) the distinction between institutional critique and personal affection.';
+      this.state.researchQuestion = 'How do Caribbean Reddit users perceive and resist narratives of US influence in the region?';
+      this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) the distinction between \'influence\' and \'control/colonialism\' in Caribbean perspectives; (2) how Puerto Rico functions as a reference point for challenging statehood narratives; (3) the role of sovereignty and self-determination as core Caribbean values; (4) how historical knowledge (Monroe Doctrine, colonial history) shapes contemporary attitudes; (5) the intersection of race, immigration policy, and geopolitical power in Caribbean discourse.';
       Storage.save(this.state);
     }
 
@@ -210,64 +218,120 @@ const App = {
       '<div class="reddit-thread">' +
         '<div class="reddit-header">' +
           '<span class="reddit-sub">r/AskTheCaribbean</span>' +
-          '<h2 class="reddit-title">What are your guys thoughts on BWIA West Indies Airways when it was in service?</h2>' +
-          '<span class="reddit-meta">Posted by u/Pretty_Aside_7674 &middot; 15 days ago</span>' +
+          '<span class="reddit-flair">Politics</span>' +
+          '<h2 class="reddit-title">How do you feel about the theories regarding US influence in the Caribbean?</h2>' +
+          '<span class="reddit-meta">Posted by u/Shonen_Fan &middot; 8 days ago</span>' +
         '</div>' +
         '<div class="reddit-post">' +
-          '<p>What are your guys thoughts on BWIA West Indies Airways when it was in service?</p>' +
+          '<p>A common joke/theory is that Puerto Rico, Cuba, Trinidad and Tobago, and Guyana will become US states in the near future. How do you feel about such claims?</p>' +
         '</div>' +
         '<div class="reddit-comments">' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/ma70_</span>' +
-            '<p>I loved their last livery. And the nickname Bwee</p>' +
+            '<span class="reddit-author">u/BrentDavidTT</span>' +
+            '<span class="reddit-badge">Top 1% Commenter</span>' +
+            '<p>I really think most of you all are young and think relationships of political, economic and military conveniences between the US and the region are new!</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/Weekly-Cicada-8615</span>' +
+            '<p>T&amp;T just sick of the Venezuelan government bs lol</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Infamous_Copy_3659</span>' +
-            '<p>I always knew that I was on the way home when I boarded and ordered a Solo Apple J. They also had red Solo if I recall correctly. And they made good spicy bloody marys.</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/Carribeantimberwolf</span>' +
-            '<p>The brown stew chicken sandwich was clutch</p>' +
+            '<span class="reddit-author">u/aguilasolige</span>' +
+            '<span class="reddit-badge">Top 1% Commenter</span>' +
+            '<p>All throughout history, superpowers always influence their neighbors, that\'s inevitable. The only thing smaller countries can do is try to benefit from it</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Kelvin62</span>' +
-            '<p>But Will It Arrive?</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/ProfessionSoft7944</span>' +
-            '<p>Better Walk If Able</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/Infamous_Copy_3659</span>' +
-            '<p>I remember this one</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/disgruntledmarmoset</span>' +
-            '<p>Sounds like Bahamasair lol</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/Lazy-Community-1288</span>' +
-            '<p>Bound to wait in airport</p>' +
+            '<span class="reddit-author">u/NeoPrimitiveOasis</span>' +
+            '<p>More like colonies, not states.</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/GUYman299</span>' +
-            '<p>The service was always fine but I remember that, even at 8, finding it weird that the national airline was called BRITISH West Indian Airways. To be honest I found no significant change in actual service when it became Caribbean Airlines but I thought the name was more appropriate.</p>' +
+            '<span class="reddit-author">u/sunlit_elais</span>' +
+            '<p>Idiotic. The US is heavily anti-immigrant right now, and they are going to give a few million people at once the option to immigrate there with full vote rights? When Puerto Rico is right there and they still haven\'t allowed them the condition of state?</p>' +
+            '<p>Try colony or puppet state.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/happy_bluebird</span>' +
+            '<p>I don\'t think you know what &quot;joke&quot; or &quot;theory&quot; mean</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/Awkward-Hulk</span>' +
+            '<p>History really fucked Cuba. Spain was stupidly repressive there, fueling the eventual wars of independence. Cuba could have easily been an autonomous community of Spain today - much like the Canary Islands*. But alas, that never happened.</p>' +
+            '<p>And then we got stuck with a dictator in the 1950s only to replace that dictator with another in 1959. That latest dictator then earned himself an embargo from the world\'s superpower. And the country has essentially regressed back to the 1800s now...</p>' +
+            '<p>*It\'s likely that the US would have invaded anyway, but a Spain with the support of the Cuban people wouldn\'t have been as easy of a target.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/frazbox</span>' +
+            '<p>Jokes on you; Puerto Rico is already America</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/QuirkyRefuse5645</span>' +
+            '<p>Not a state though, which is what OP said.</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/elRobRex</span>' +
+            '<p>The Supreme Court of the United States disagrees with you.</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/QuirkyRefuse5645</span>' +
+            '<p>The Supreme Court of the United States said Puerto Rico is a state? I hope you\'re just trolling because that is obviously nowhere close to being true.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/CarelessPangolin993</span>' +
+            '<p>It\'s certainly not a theory (assuming your usage of the term is in the non scientific sense). It\'s just a matter of fact. From the Monroe doctrine to the revival under trump (not that it ever went away) it\'s been this way for centuries. The recent expulsion of Cuban doctors across many Caribbean countries is due to U.S pressure and threats. They have halted countries upgrading their infrastructure because it involves Chinese equipment. They had Cuba under embargo and has assets in Haiti. So to suggest the U.S has influence would be underselling the state of affairs</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/Tall_Pressure7042</span>' +
+            '<p>It is like LATAM. America needs happy clients, not rebels.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/TumbleweedSuper9930</span>' +
+            '<p>Looking at Education, infrastructure and crime under British rule and today, many people questioning home rule for TnT</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/Weekly-Cicada-8615</span>' +
+            '<p>I see Guyana as more like a eu territory than to ever to become a US backed state since it the European who buy most of the oil.</p>' +
+          '</div>' +
+          '<div class="reddit-comment reply">' +
+            '<span class="reddit-author">u/TeachingSpiritual888</span>' +
+            '<p>Not eu territory.</p>' +
+            '<p>Guyana is like a neutral place, we sell to whoever. It just so happens that America and EU buy most of our oil.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/Islandrocketman</span>' +
+            '<p>Who wants to give up their sovereignty? None of nations.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/Genki-sama2</span>' +
+            '<p>I have seen an article giving the pros and cons of hands being a US satellite state, actually giving credence to it. I\'d say they\'re correct. Trinidad already halfway there</p>' +
           '</div>' +
           '<div class="reddit-comment reply">' +
             '<span class="reddit-author">u/StrategyFlashy4526</span>' +
-            '<p>It was part of British Overseas Airways Corporation and was probably a well established trade name by the time it was sold to the Trinidad Gov. Changing trade name could lead to loss of business.</p>' +
-          '</div>' +
-          '<div class="reddit-comment reply">' +
-            '<span class="reddit-author">u/Pure_Toe3513</span>' +
-            '<p>Exactly, quite appropriate for the time of founding. In fact, the legacy is not completely dead as the codes BW and BWA are still used.</p>' +
+            '<p>No credence to that notion. The trump administration has put great emphasis on removing brown and black people from the US. They will never give free entry to non- Europeans.</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/Knight-Man</span>' +
-            '<p>This commercial was the last one I remember before it ceased operations in 2006 and it has lived rent free in my mind for 20 years now. It used to air during the evening news.</p>' +
+            '<span class="reddit-author">u/Cool_Bananaquit9</span>' +
+            '<p>I hope we don\'t become a state</p>' +
           '</div>' +
           '<div class="reddit-comment">' +
-            '<span class="reddit-author">u/[deleted]</span>' +
-            '<p>I loved it, but I knew there was always going to be a delay!</p>' +
+            '<span class="reddit-author">u/Own-Enthusiasm-2348</span>' +
+            '<p>As a Puerto Rican, all I want for the island is free economic trade with other countries so we can thrive. Instead...we have to depend on the USA for everything...I don\'t hate the USA, but historically you simply cannot deny the damage the USA has done to Puerto Rico.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/Icy_Scar_1249</span>' +
+            '<p>I could see Cuba maybe happenning, but not the rest ever. PR is already a territory, and look how hard it\'s been to get them to Statehood, will never happen with TNT and Guyana unless they want to be colonies</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/catejeda</span>' +
+            '<p>False.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/Em1-_-</span>' +
+            '<span class="reddit-badge">Top 1% Commenter</span>' +
+            '<p>Puerto Rico and Cuba belong to the Antillean Confederation, don\'t care about the other two, but PR gotta become independent first so Hostos can be returned to his motherland (As were his wishes) and the Antillean Confederation can begin.</p>' +
+          '</div>' +
+          '<div class="reddit-comment">' +
+            '<span class="reddit-author">u/catsoncrack420</span>' +
+            '<p>Ridiculous. US has less to gain and more to lose. Now territories with autocracy, that I can see. Like Puerto Rico but we won\'t be granted citizenship. Just better access to work visas</p>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -548,6 +612,7 @@ const App = {
    */
   endSession() {
     Timer.stop();
+    AI.stopHeartbeat();
     this.updatePhaseDisplay();
 
     var input = document.getElementById('chat-input');

@@ -43,6 +43,23 @@
       </div>
       <p class="setup-card__hint">The AI key is saved on your device only, not in the code.</p>
 
+      <label class="setup-card__filter-label" for="session-filter-select">Choose your coding filter for this session:</label>
+      <select id="session-filter-select" class="code-filter-native-select session-filter-select" aria-label="Session coding filter">
+        <option value="">Select a coding filter...</option>
+        <option value="In Vivo">In Vivo — participant's own words</option>
+        <option value="Descriptive">Descriptive — summarise the topic</option>
+        <option value="Process">Process — actions with -ing words</option>
+        <option value="Initial">Initial — open, exploratory coding</option>
+        <option value="Emotion">Emotion — expressed or inferred emotions</option>
+        <option value="Values">Values — beliefs and attitudes</option>
+        <option value="Evaluation">Evaluation — evaluative judgments</option>
+        <option value="Versus">Versus — dichotomies and conflicts</option>
+        <option value="Structural">Structural — relevance to research question</option>
+        <option value="Holistic">Holistic — single code for a large unit</option>
+        <option value="Provisional">Provisional — pre-established code list</option>
+      </select>
+      <div class="setup-filter-help" id="setup-filter-help"></div>
+
       <button id="btn-start" class="mdc-button mdc-button--raised setup-btn">
         <span class="mdc-button__ripple"></span>
         <span class="material-icons mdc-button__icon">play_arrow</span>
@@ -172,25 +189,12 @@
         </div>
       </div>
 
-      <div class="mdc-select mdc-select--outlined code-modal-field" id="code-filter-field">
-        <div class="mdc-select__anchor" role="button" aria-haspopup="listbox" tabindex="0">
-          <span class="mdc-notched-outline">
-            <span class="mdc-notched-outline__leading"></span>
-            <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label">Coding Filter</span>
-            </span>
-            <span class="mdc-notched-outline__trailing"></span>
-          </span>
-          <span class="mdc-select__selected-text-container">
-            <span class="mdc-select__selected-text"></span>
-          </span>
-          <span class="mdc-select__dropdown-icon">
-            <span class="material-icons">arrow_drop_down</span>
-          </span>
-        </div>
-        <!-- Fallback native select for reliability -->
+      <div class="code-modal__session-filter" id="code-modal-filter-display">
+        <span class="code-modal__filter-label">Coding Filter:</span>
+        <span class="code-modal__filter-value" id="code-filter-value"></span>
       </div>
-      <select id="code-filter-select" class="code-filter-native-select" aria-label="Coding filter">
+      <!-- Hidden select preserved for data compatibility -->
+      <select id="code-filter-select" class="code-filter-native-select" aria-label="Coding filter" style="display:none;">
         <option value="">Select a coding filter...</option>
         <option value="In Vivo">In Vivo</option>
         <option value="Descriptive">Descriptive</option>
@@ -315,22 +319,22 @@
         mdc.ripple.MDCRipple.attachTo(el);
       });
 
-      // Filter help tooltip
-      document.getElementById('code-filter-select').addEventListener('change', function() {
-        var descriptions = {
-          'In Vivo': "Uses the participant's own words as the code. Preserves the original voice.",
-          'Descriptive': 'Summarises the topic of a passage in a word or short phrase.',
-          'Process': 'Uses gerunds (-ing words) to capture actions or processes.',
-          'Initial': 'Open, exploratory coding. Stay close to the data.',
-          'Emotion': 'Labels the emotions expressed or inferred from the data.',
-          'Values': 'Captures values, attitudes, and beliefs reflected in the data.',
-          'Evaluation': 'Assigns evaluative judgments to the data.',
-          'Versus': 'Identifies dichotomies, conflicts, or binary oppositions.',
-          'Structural': 'Codes data according to its relevance to the research question.',
-          'Holistic': 'Applies a single code to a large unit of data. Captures the gist.',
-          'Provisional': 'Starts from a pre-established list of codes, then modifies as needed.'
-        };
-        document.getElementById('filter-help').textContent = descriptions[this.value] || '';
+      // Setup screen filter help tooltip
+      var filterDescriptions = {
+        'In Vivo': "Uses the participant's own words as the code. Preserves the original voice.",
+        'Descriptive': 'Summarises the topic of a passage in a word or short phrase.',
+        'Process': 'Uses gerunds (-ing words) to capture actions or processes.',
+        'Initial': 'Open, exploratory coding. Stay close to the data.',
+        'Emotion': 'Labels the emotions expressed or inferred from the data.',
+        'Values': 'Captures values, attitudes, and beliefs reflected in the data.',
+        'Evaluation': 'Assigns evaluative judgments to the data.',
+        'Versus': 'Identifies dichotomies, conflicts, or binary oppositions.',
+        'Structural': 'Codes data according to its relevance to the research question.',
+        'Holistic': 'Applies a single code to a large unit of data. Captures the gist.',
+        'Provisional': 'Starts from a pre-established list of codes, then modifies as needed.'
+      };
+      document.getElementById('session-filter-select').addEventListener('change', function() {
+        document.getElementById('setup-filter-help').textContent = filterDescriptions[this.value] || '';
       });
 
       // Pre-fill API key if previously saved
