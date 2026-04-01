@@ -10,6 +10,7 @@ var Coding = {
   ],
   colourIndex: 0,
   codeColourMap: {},
+  activeSelectionWindow: null,
 
   /**
    * Coding filter definitions from Saldana
@@ -50,10 +51,10 @@ var Coding = {
     if (threadPane) {
       threadPane.addEventListener('mouseup', function(e) {
         // Small delay to let the selection finalise
-        setTimeout(function() { self.handleTextSelection(e); }, 10);
+        setTimeout(function() { self.handleTextSelection(e, window); }, 10);
       });
       threadPane.addEventListener('touchend', function(e) {
-        setTimeout(function() { self.handleTextSelection(e); }, 100);
+        setTimeout(function() { self.handleTextSelection(e, window); }, 100);
       });
     }
 
@@ -68,11 +69,12 @@ var Coding = {
   /**
    * Handle text selection in the thread pane
    */
-  handleTextSelection: function(e) {
+  handleTextSelection: function(e, selectionWindow) {
     var toolbar = document.getElementById('annotation-toolbar');
     if (!toolbar) return;
 
-    var selection = window.getSelection();
+    var selWindow = selectionWindow || window;
+    var selection = selWindow.getSelection();
 
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
       // Don't hide if the user clicked on the toolbar itself
@@ -86,7 +88,7 @@ var Coding = {
     if (!threadPane) return;
 
     var anchorNode = selection.anchorNode;
-    if (!threadPane.contains(anchorNode)) {
+    if (selWindow === window && !threadPane.contains(anchorNode)) {
       toolbar.classList.remove('visible');
       return;
     }
@@ -108,6 +110,7 @@ var Coding = {
     toolbar.style.top = top + 'px';
     toolbar.style.left = left + 'px';
     toolbar.classList.add('visible');
+    this.activeSelectionWindow = selWindow;
 
     // Store selected text for code creation
     toolbar.dataset.selectedText = selectedText;
@@ -117,11 +120,12 @@ var Coding = {
    * Apply annotation (bold, underline, or highlight colour)
    */
   applyAnnotation: function(type, colour) {
-    var selection = window.getSelection();
+    var selectionContext = this.activeSelectionWindow || window;
+    var selection = selectionContext.getSelection();
     if (!selection || selection.isCollapsed) return;
 
     var range = selection.getRangeAt(0);
-    var span = document.createElement('span');
+    var span = (selection.anchorNode && selection.anchorNode.ownerDocument || document).createElement('span');
 
     switch (type) {
       case 'bold':
@@ -266,7 +270,8 @@ var Coding = {
     var threadContent = document.getElementById('thread-content');
     if (!threadContent) return;
 
-    var walker = document.createTreeWalker(threadContent, NodeFilter.SHOW_TEXT, null, false);
+    var doc = threadContent.ownerDocument || document;
+    var walker = doc.createTreeWalker(threadContent, NodeFilter.SHOW_TEXT, null, false);
     var node;
 
     while ((node = walker.nextNode())) {
@@ -297,7 +302,7 @@ var Coding = {
     if (!list) return;
 
     if (!App.state || App.state.codes.length === 0) {
-      list.innerHTML = '<div class="codes-empty"><span class="material-icons">code</span><p>No codes yet. Select text in the thread and tap "Code" to begin.</p></div>';
+      list.innerHTML = '<div class="codes-empty"><span class="material-icons">code</span><p>No codes yet. Select text in the document and tap "Code" to begin.</p></div>';
       return;
     }
 

@@ -68,38 +68,59 @@ const App = {
         self.showSnackbar('Please enter your Student ID.');
         return;
       }
-      // Save API key if provided
-      var apiKeyInput = document.getElementById('api-key-input');
-      if (apiKeyInput && apiKeyInput.value.trim()) {
-        AI.saveApiKey(apiKeyInput.value.trim());
+
+      var docUrlInput = document.getElementById('doc-url-input');
+      var docUrl = docUrlInput ? docUrlInput.value.trim() : '';
+      if (!docUrl) {
+        self.showSnackbar('Please paste a Google Doc URL.');
+        return;
       }
+
+      var docId = self.parseGoogleDocId(docUrl);
+      if (!docId) {
+        self.showSnackbar('Could not recognise that URL. Please paste a Google Docs sharing link.');
+        return;
+      }
+
       self.state.studentId = studentId;
+      self.state.documentUrl = docUrl;
+      self.state.documentId = docId;
       Storage.save(self.state);
       self.startSession(false);
     };
   },
 
   /**
+   * Parse a Google Doc ID from various URL formats
+   */
+  parseGoogleDocId(url) {
+    // Match: https://docs.google.com/document/d/{ID}/...
+    var match = url.match(/\/document\/d\/([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    // Match: https://drive.google.com/file/d/{ID}/...
+    match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    // Match: https://drive.google.com/open?id={ID}
+    match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    return null;
+  },
+
+  /**
    * Start or resume the main session.
-   * This is deliberately synchronous for all UI setup.
-   * Network calls happen in the background.
    */
   startSession(isResume) {
     // 1. Show main app immediately
     document.getElementById('setup-screen').classList.remove('active');
     document.getElementById('main-app').classList.add('active');
 
-    // 2. Assign a random thread if not already set
-    if (!this.state.threadId) {
-      var threads = ['thread-01', 'thread-02'];
-      this.state.threadId = threads[Math.floor(Math.random() * threads.length)];
-      Storage.save(this.state);
-    }
+    // 2. Show placeholder content immediately
+    this.loadFallbackDocument();
 
-    // 3. Load fallback thread content immediately (synchronous, always works)
-    this.loadFallbackThread();
-
-    // 4. Set up all UI handlers (synchronous — must never be blocked by network)
+    // 3. Set up all UI handlers
     Coding.init();
     this.setupChatInput();
     this.setupDrawer();
@@ -143,15 +164,14 @@ const App = {
     if (isResume) {
       Coding.renderCodesList();
       this.restoreChat();
-      // Show filter bar if no filter selected yet
       if (!this.state.selectedFilter) {
         var filterBar = document.getElementById('filter-selection-bar');
         if (filterBar) filterBar.style.display = 'flex';
       }
     }
 
-    // 6. Background: try to load the real thread (replaces fallback if successful)
-    this.tryLoadThread();
+    // 6. Background: try to load the Google Doc content
+    this.tryLoadDocument();
 
     // 7. Background: initialise AI model selection and greet student
     AI.listAndSelectModel();
@@ -159,116 +179,91 @@ const App = {
       this.greetStudent();
     }
 
-    // 8. Start AI heartbeat for agentic check-ins during pre-coding/coding
+    // 8. Start AI heartbeat
     AI.startHeartbeat();
   },
 
   /**
-   * Try to fetch the real thread from the server.
-   * This runs in the background — if it fails, the fallback is already loaded.
+   * Try to fetch the Google Doc content as HTML via Google Drive API.
    */
-  tryLoadThread() {
+  tryLoadDocument() {
     var self = this;
-    var threadId = this.state.threadId;
+    var docId = this.state.documentId;
+    if (!docId) return;
 
-    fetch('threads/' + threadId + '/metadata.json')
-      .then(function(response) {
-        if (!response.ok) throw new Error('Metadata fetch failed: ' + response.status);
-        return response.json();
-      })
-      .then(function(metadata) {
-        self.state.researchQuestion = metadata.researchQuestion;
-        self.state.threadTitle = metadata.threadTitle;
-        self.state.subreddit = metadata.subreddit;
-        self.state.aiGuidance = metadata.aiGuidance;
-        Storage.save(self.state);
-        self.updateResearchQuestionDisplay();
+    var apiKey = AI.getApiKey();
+    if (!apiKey) {
+      console.log('No API key available for Google Drive export. Check config.js.');
+      return;
+    }
 
-        // Now try to load the thread HTML
-        return fetch('threads/' + threadId + '/index.html');
-      })
+    var endpoint = 'https://www.googleapis.com/drive/v3/files/' + docId + '/export?mimeType=text/html&key=' + apiKey;
+
+    fetch(endpoint)
       .then(function(response) {
-        if (!response.ok) throw new Error('Thread HTML fetch failed: ' + response.status);
+        if (!response.ok) {
+          return response.text().then(function(errBody) {
+            throw new Error('Drive API error (HTTP ' + response.status + '): ' + errBody);
+          });
+        }
         return response.text();
       })
       .then(function(html) {
-        // Only replace if the HTML looks like clean content (not a full page with <html> tags)
         var threadContent = document.getElementById('thread-content');
-        if (threadContent && html.length < 500000) {
-          threadContent.innerHTML = html;
-          self.rewriteThreadAssetUrls(threadContent, threadId);
+        if (!threadContent) return;
+
+        // Extract just the body content from the full HTML document
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(html, 'text/html');
+
+        // Copy over any inline styles from the Google Doc <head>
+        var styles = doc.querySelectorAll('style');
+        var styleText = '';
+        styles.forEach(function(s) { styleText += s.textContent; });
+
+        // Build the rendered content
+        var bodyHtml = doc.body ? doc.body.innerHTML : html;
+
+        // Wrap with a scoped style block
+        threadContent.innerHTML = '<style>' + styleText + '</style>' +
+          '<div class="gdoc-content">' + bodyHtml + '</div>';
+
+        // Try to extract a title from the document
+        var firstHeading = doc.querySelector('h1, h2, h3, p');
+        if (firstHeading && !self.state.documentTitle) {
+          var titleText = firstHeading.textContent.trim();
+          if (titleText.length > 0 && titleText.length < 200) {
+            self.state.documentTitle = titleText;
+            Storage.save(self.state);
+          }
         }
       })
       .catch(function(err) {
-        console.log('Using fallback thread (fetch failed):', err.message);
-        // Fallback is already loaded, nothing to do
+        console.error('Failed to load Google Doc:', err.message);
+        var threadContent = document.getElementById('thread-content');
+        if (threadContent) {
+          threadContent.innerHTML =
+            '<div style="color: var(--outline); text-align: center; padding: 32px;">' +
+              '<p style="font-size: 16px; margin-bottom: 12px;">Could not load the Google Doc.</p>' +
+              '<p style="font-size: 13px; margin-bottom: 8px;">Make sure:</p>' +
+              '<ul style="text-align: left; max-width: 400px; margin: 0 auto; font-size: 13px; line-height: 1.8;">' +
+                '<li>The document is shared as "Anyone with the link can view"</li>' +
+                '<li>The Google Drive API is enabled in your Google Cloud project</li>' +
+                '<li>Your API key has access to the Drive API</li>' +
+              '</ul>' +
+              '<p style="font-size: 12px; color: var(--error); margin-top: 16px;">' + App.escapeHtml(err.message) + '</p>' +
+            '</div>';
+        }
       });
   },
 
   /**
-   * Load fallback thread content synchronously into the DOM
+   * Load fallback placeholder content
    */
-  loadFallbackThread() {
+  loadFallbackDocument() {
     var threadContent = document.getElementById('thread-content');
     if (!threadContent) return;
-
-    // Set default metadata based on which thread is selected
-    if (!this.state.threadTitle) {
-      if (this.state.threadId === 'thread-02') {
-        this.state.threadTitle = 'What are your guys thoughts on BWIA West Indies Airways when it was in service?';
-        this.state.subreddit = 'r/AskTheCaribbean';
-        this.state.researchQuestion = 'How do Caribbean nationals construct collective memory and cultural identity through shared experiences of regional institutions, and what role does nostalgia play in evaluating post-independence Caribbean enterprises?';
-        this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) how shared memories of BWIA function as markers of Caribbean cultural identity and regional belonging; (2) the significance of the airline\'s name (BRITISH West Indian Airways) and what the naming reveals about colonial legacies in post-independence institutions; (3) humour and wordplay (acronym jokes like \"But Will It Arrive?\", \"Better Walk If Able\") as a communal semiotic practice that builds in-group solidarity; (4) how sensory memories (food, drinks, livery) encode cultural meaning and national pride; (5) the transition from BWIA to Caribbean Airlines as a site of identity negotiation between colonial heritage and regional self-determination; (6) how profile pictures, flair, and engagement patterns reveal community dynamics in Caribbean digital spaces.';
-      } else {
-        this.state.threadTitle = 'How do you feel about the theories regarding US influence in the Caribbean?';
-        this.state.subreddit = 'r/AskTheCaribbean';
-        this.state.researchQuestion = 'How do Caribbean Reddit users perceive and resist narratives of US influence in the region?';
-        this.state.aiGuidance = 'Focus assessment on whether the student identifies: (1) the distinction between \'influence\' and \'control/colonialism\' in Caribbean perspectives; (2) how Puerto Rico functions as a reference point for challenging statehood narratives; (3) the role of sovereignty and self-determination as core Caribbean values; (4) how historical knowledge (Monroe Doctrine, colonial history) shapes contemporary attitudes; (5) the intersection of race, immigration policy, and geopolitical power in Caribbean discourse.';
-      }
-      Storage.save(this.state);
-    }
-
-    threadContent.innerHTML = '<p style="color: var(--outline); text-align: center; padding: 32px;">Loading thread...</p>';
-  },
-
-  /**
-   * Rewrites relative asset URLs in injected thread HTML.
-   * Thread HTML is fetched and injected into the main app document, so
-   * paths like `images/foo.jpg` must be resolved against `threads/{id}/`.
-   */
-  rewriteThreadAssetUrls(container, threadId) {
-    if (!container || !threadId) return;
-
-    var basePath = 'threads/' + threadId + '/';
-    var attrTargets = [
-      { selector: '[src]', attr: 'src' },
-      { selector: '[href]', attr: 'href' },
-      { selector: '[poster]', attr: 'poster' }
-    ];
-
-    function isRelativeUrl(url) {
-      if (!url) return false;
-      var trimmed = url.trim();
-      return !(
-        trimmed.indexOf('http://') === 0 ||
-        trimmed.indexOf('https://') === 0 ||
-        trimmed.indexOf('//') === 0 ||
-        trimmed.indexOf('data:') === 0 ||
-        trimmed.indexOf('blob:') === 0 ||
-        trimmed.indexOf('#') === 0 ||
-        trimmed.indexOf('/') === 0 ||
-        trimmed.indexOf('threads/') === 0
-      );
-    }
-
-    attrTargets.forEach(function(target) {
-      var nodes = container.querySelectorAll(target.selector);
-      nodes.forEach(function(node) {
-        var current = node.getAttribute(target.attr);
-        if (!isRelativeUrl(current)) return;
-        node.setAttribute(target.attr, basePath + current.replace(/^\.\//, ''));
-      });
-    });
+    threadContent.innerHTML = '<p style="color: var(--outline); text-align: center; padding: 32px;">Loading document...</p>';
   },
 
   /**
@@ -314,18 +309,20 @@ const App = {
    */
   greetStudent() {
     var self = this;
+    var docInfo = this.state.documentTitle ? ' The document is titled "' + this.state.documentTitle + '".' : '';
+    var rqInfo = this.state.researchQuestion ? ' The research question is: "' + this.state.researchQuestion + '".' : '';
+
     AI.sendMessage(
-      '[SYSTEM: The session has just started. The student\'s ID is "' + this.state.studentId + '". The research question is: "' + this.state.researchQuestion + '". The thread being analysed is titled "' + this.state.threadTitle + '" from ' + this.state.subreddit + '. Please greet the student warmly, briefly explain the task, and then ask them which coding filter they would like to use for this session and why. List the available filters: In Vivo, Descriptive, Process, Initial, Emotion, Values, Evaluation, Versus, Structural, Holistic, Provisional. The student will select their filter from a dropdown that will appear below this chat.]'
+      '[SYSTEM: The session has just started. The student\'s ID is "' + this.state.studentId + '".' + docInfo + rqInfo + ' The student has uploaded a personal reflection or field notes document for qualitative coding. Please greet the student warmly, briefly explain the task (they will read their document and begin coding using their chosen filter), and then ask them which coding filter they would like to use for this session and why. List the available filters: In Vivo, Descriptive, Process, Initial, Emotion, Values, Evaluation, Versus, Structural, Holistic, Provisional. The student will select their filter from a dropdown that will appear below this chat.]'
     ).then(function(greeting) {
       self.addChatMessage('model', greeting);
-      // Show the filter selection bar after greeting
       if (!self.state.selectedFilter) {
         var filterBar = document.getElementById('filter-selection-bar');
         if (filterBar) filterBar.style.display = 'flex';
       }
     }).catch(function(err) {
       console.error('AI greeting failed:', err);
-      self.addChatMessage('model', 'Welcome! Today you will read a Reddit thread and practise qualitative coding. First, please choose a coding filter from the dropdown below. Then take a few minutes to read the thread and start creating codes by selecting text.');
+      self.addChatMessage('model', 'Welcome! Today you will read your document and practise qualitative coding. First, please choose a coding filter from the dropdown below. Then take a few minutes to read the document and start creating codes by selecting text.');
       if (!self.state.selectedFilter) {
         var filterBar = document.getElementById('filter-selection-bar');
         if (filterBar) filterBar.style.display = 'flex';

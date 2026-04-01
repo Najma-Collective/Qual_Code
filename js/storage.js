@@ -11,10 +11,10 @@ const Storage = {
   createEmptyState() {
     return {
       studentId: '',
-      threadId: '',
+      documentUrl: '',
+      documentId: '',
+      documentTitle: '',
       researchQuestion: '',
-      threadTitle: '',
-      subreddit: '',
       sessionStartTime: null,
       elapsedSeconds: 0,
       phase: 'setup', // setup | precoding | coding | followup | debrief | complete
