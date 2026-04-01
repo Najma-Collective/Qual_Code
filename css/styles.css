@@ -318,6 +318,19 @@ html, body {
   color: var(--outline);
   margin-bottom: 2px;
 }
+.reddit-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.reddit-embed-img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 8px 0;
+  display: block;
+}
 /* Deeper reply nesting */
 .reddit-comment.reply.depth-2 {
   margin-left: 48px;
