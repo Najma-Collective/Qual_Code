@@ -183,14 +183,16 @@ var AI = {
 
     App.state.conversationHistory.push({
       role: 'user',
-      parts: [{ text: userText }]
+      parts: [{ text: userText }],
+      timestamp: new Date().toISOString()
     });
     Storage.save(App.state);
 
     return this.callGemini(App.state.conversationHistory).then(function(responseText) {
       App.state.conversationHistory.push({
         role: 'model',
-        parts: [{ text: responseText }]
+        parts: [{ text: responseText }],
+        timestamp: new Date().toISOString()
       });
       Storage.save(App.state);
       return responseText;
@@ -299,53 +301,82 @@ var AI = {
     this.stopHeartbeat();
     var self = this;
 
+    // Fire first heartbeat after 30 seconds (not waiting a full minute)
+    this._heartbeatFirstTimeout = setTimeout(function() {
+      self._doHeartbeat();
+    }, 30000);
+
     this.heartbeatIntervalId = setInterval(function() {
-      if (!self.hasApiKey()) return;
-
-      var phase = App.state.phase;
-      // Only pulse during pre-coding and coding phases
-      if (phase !== 'precoding' && phase !== 'coding') {
-        self.stopHeartbeat();
-        return;
-      }
-
-      var elapsed = Timer.getElapsedMinutes();
-      var codeCount = App.state.codes.length;
-      var filterChosen = App.state.selectedFilter || '';
-
-      var heartbeatMsg;
-      if (phase === 'precoding') {
-        heartbeatMsg = '[SYSTEM HEARTBEAT — do NOT repeat this tag to the student. ' +
-          'Elapsed: ' + elapsed + ' min. Phase: pre-coding. ' +
-          'Codes created: ' + codeCount + '. Selected filter: ' + (filterChosen || 'not yet chosen') + '. ' +
-          'If the student has not yet chosen a coding filter, gently ask which one they plan to use and why. ' +
-          'If they have chosen a filter but have not begun reading, encourage them to start reading the thread. ' +
-          'If they seem to be reading already, stay silent and respond with exactly: "[SILENT]". ' +
-          'Keep any response to 1-2 sentences max.]';
-      } else {
-        heartbeatMsg = '[SYSTEM HEARTBEAT — do NOT repeat this tag to the student. ' +
-          'Elapsed: ' + elapsed + ' min. Phase: coding. ' +
-          'Codes created: ' + codeCount + '. Selected filter: ' + (filterChosen || 'not yet chosen') + '. ' +
-          'If the student has 0 codes and more than 7 minutes have elapsed, gently encourage them to start coding. ' +
-          'Otherwise, stay silent and respond with exactly: "[SILENT]". ' +
-          'Keep any response to 1-2 sentences max.]';
-      }
-
-      self.sendMessage(heartbeatMsg).then(function(response) {
-        // Only show the response if the AI chose to speak (not silent)
-        if (response && response.indexOf('[SILENT]') === -1 && response.trim().length > 0) {
-          App.addChatMessage('model', response);
-        }
-      }).catch(function() {
-        // Heartbeat failure is non-critical; silently ignore
-      });
+      self._doHeartbeat();
     }, this.heartbeatIntervalMs);
+  },
+
+  /**
+   * Execute a single heartbeat check-in
+   */
+  _doHeartbeat: function() {
+    if (!this.hasApiKey()) return;
+
+    var phase = App.state.phase;
+    // Only pulse during pre-coding and coding phases
+    if (phase !== 'precoding' && phase !== 'coding') {
+      this.stopHeartbeat();
+      return;
+    }
+
+    var elapsed = Timer.getElapsedMinutes();
+    var codeCount = App.state.codes.length;
+    var filterChosen = App.state.selectedFilter || '';
+
+    // Build code summary so the AI can see actual student work
+    var codeSummary = '';
+    if (codeCount > 0) {
+      codeSummary = ' Current codes: ';
+      codeSummary += App.state.codes.map(function(c, i) {
+        return (i + 1) + '. "' + c.label + '" (' + c.filter + ') on text: "' + (c.highlightedText.length > 80 ? c.highlightedText.substring(0, 80) + '...' : c.highlightedText) + '" — memo: "' + (c.memo || 'none') + '"';
+      }).join('; ');
+      codeSummary += '.';
+    }
+
+    var heartbeatMsg;
+    if (phase === 'precoding') {
+      heartbeatMsg = '[SYSTEM HEARTBEAT — do NOT repeat this tag to the student. ' +
+        'Elapsed: ' + elapsed + ' min. Phase: pre-coding. ' +
+        'Codes created: ' + codeCount + '. Selected filter: ' + (filterChosen || 'not yet chosen') + '.' + codeSummary + ' ' +
+        'If the student has not yet chosen a coding filter, gently ask which one they plan to use and why. ' +
+        'If they have chosen a filter but have not begun reading, encourage them to start reading the thread. ' +
+        'If they seem to be reading already, stay silent and respond with exactly: "[SILENT]". ' +
+        'Keep any response to 1-2 sentences max.]';
+    } else {
+      heartbeatMsg = '[SYSTEM HEARTBEAT — do NOT repeat this tag to the student. ' +
+        'Elapsed: ' + elapsed + ' min. Phase: coding. ' +
+        'Codes created: ' + codeCount + '. Selected filter: ' + (filterChosen || 'not yet chosen') + '.' + codeSummary + ' ' +
+        'Review the student\'s codes above. ' +
+        'If the student has 0 codes and more than 7 minutes have elapsed, gently encourage them to start coding. ' +
+        'If the student has created codes, assess their quality: are the code labels meaningful or gibberish? Are the memos thoughtful? Is the chosen filter being applied correctly? ' +
+        'If you notice a problem (e.g. unclear labels, empty memos, codes that don\'t match the filter, or gibberish entries), give a brief, supportive nudge. ' +
+        'If everything looks good and the student is working well, respond with exactly: "[SILENT]". ' +
+        'Keep any response to 1-2 sentences max.]';
+    }
+
+    this.sendMessage(heartbeatMsg).then(function(response) {
+      // Only show the response if the AI chose to speak (not silent)
+      if (response && response.indexOf('[SILENT]') === -1 && response.trim().length > 0) {
+        App.addChatMessage('model', response);
+      }
+    }).catch(function() {
+      // Heartbeat failure is non-critical; silently ignore
+    });
   },
 
   /**
    * Stop the heartbeat check-in
    */
   stopHeartbeat: function() {
+    if (this._heartbeatFirstTimeout) {
+      clearTimeout(this._heartbeatFirstTimeout);
+      this._heartbeatFirstTimeout = null;
+    }
     if (this.heartbeatIntervalId) {
       clearInterval(this.heartbeatIntervalId);
       this.heartbeatIntervalId = null;

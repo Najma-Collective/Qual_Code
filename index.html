@@ -43,23 +43,6 @@
       </div>
       <p class="setup-card__hint">The AI key is saved on your device only, not in the code.</p>
 
-      <label class="setup-card__filter-label" for="session-filter-select">Choose your coding filter for this session:</label>
-      <select id="session-filter-select" class="code-filter-native-select session-filter-select" aria-label="Session coding filter">
-        <option value="">Select a coding filter...</option>
-        <option value="In Vivo">In Vivo — participant's own words</option>
-        <option value="Descriptive">Descriptive — summarise the topic</option>
-        <option value="Process">Process — actions with -ing words</option>
-        <option value="Initial">Initial — open, exploratory coding</option>
-        <option value="Emotion">Emotion — expressed or inferred emotions</option>
-        <option value="Values">Values — beliefs and attitudes</option>
-        <option value="Evaluation">Evaluation — evaluative judgments</option>
-        <option value="Versus">Versus — dichotomies and conflicts</option>
-        <option value="Structural">Structural — relevance to research question</option>
-        <option value="Holistic">Holistic — single code for a large unit</option>
-        <option value="Provisional">Provisional — pre-established code list</option>
-      </select>
-      <div class="setup-filter-help" id="setup-filter-help"></div>
-
       <button id="btn-start" class="mdc-button mdc-button--raised setup-btn">
         <span class="mdc-button__ripple"></span>
         <span class="material-icons mdc-button__icon">play_arrow</span>
@@ -133,6 +116,27 @@
       <!-- Chat Pane -->
       <div class="chat-pane" role="region" aria-label="AI tutor chat">
         <div class="chat-messages" id="chat-messages" role="log" aria-live="polite"></div>
+
+        <!-- Filter selection banner (shown until student picks a filter) -->
+        <div id="filter-selection-bar" class="filter-selection-bar" style="display:none;">
+          <label class="filter-selection-bar__label" for="session-filter-select">Select your coding filter:</label>
+          <select id="session-filter-select" class="code-filter-native-select" aria-label="Session coding filter">
+            <option value="">Choose a filter...</option>
+            <option value="In Vivo">In Vivo — participant's own words</option>
+            <option value="Descriptive">Descriptive — summarise the topic</option>
+            <option value="Process">Process — actions with -ing words</option>
+            <option value="Initial">Initial — open, exploratory coding</option>
+            <option value="Emotion">Emotion — expressed or inferred emotions</option>
+            <option value="Values">Values — beliefs and attitudes</option>
+            <option value="Evaluation">Evaluation — evaluative judgments</option>
+            <option value="Versus">Versus — dichotomies and conflicts</option>
+            <option value="Structural">Structural — relevance to research question</option>
+            <option value="Holistic">Holistic — single code for a large unit</option>
+            <option value="Provisional">Provisional — pre-established code list</option>
+          </select>
+          <div class="filter-selection-bar__help" id="setup-filter-help"></div>
+        </div>
+
         <div class="chat-input-bar">
           <textarea id="chat-input" rows="1" placeholder="Type a message..." aria-label="Chat message input"></textarea>
           <button id="btn-send" class="mdc-fab mdc-fab--mini btn-send" aria-label="Send message">
@@ -319,7 +323,7 @@
         mdc.ripple.MDCRipple.attachTo(el);
       });
 
-      // Setup screen filter help tooltip
+      // Filter selection help tooltip (in-app bar)
       var filterDescriptions = {
         'In Vivo': "Uses the participant's own words as the code. Preserves the original voice.",
         'Descriptive': 'Summarises the topic of a passage in a word or short phrase.',
@@ -333,9 +337,30 @@
         'Holistic': 'Applies a single code to a large unit of data. Captures the gist.',
         'Provisional': 'Starts from a pre-established list of codes, then modifies as needed.'
       };
-      document.getElementById('session-filter-select').addEventListener('change', function() {
-        document.getElementById('setup-filter-help').textContent = filterDescriptions[this.value] || '';
-      });
+      var filterSelect = document.getElementById('session-filter-select');
+      if (filterSelect) {
+        filterSelect.addEventListener('change', function() {
+          var helpEl = document.getElementById('setup-filter-help');
+          if (helpEl) helpEl.textContent = filterDescriptions[this.value] || '';
+          // Save the selected filter to state
+          if (this.value && App.state) {
+            App.state.selectedFilter = this.value;
+            Storage.save(App.state);
+            // Notify AI of the filter choice
+            var filterBar = document.getElementById('filter-selection-bar');
+            if (filterBar) filterBar.style.display = 'none';
+            // Send filter choice as a user message
+            App.addChatMessage('user', 'I choose the ' + this.value + ' coding filter.');
+            App.showTypingIndicator();
+            AI.sendMessage('I choose the ' + this.value + ' coding filter.').then(function(response) {
+              App.hideTypingIndicator();
+              App.addChatMessage('model', response);
+            }).catch(function() {
+              App.hideTypingIndicator();
+            });
+          }
+        });
+      }
 
       // Pre-fill API key if previously saved
       if (AI.loadApiKey()) {
