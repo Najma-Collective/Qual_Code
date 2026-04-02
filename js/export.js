@@ -107,9 +107,6 @@ const Export = {
 
     y += 4;
 
-    addSubtitle('Research Question');
-    addBody('"' + (state.researchQuestion || 'Not available') + '"');
-
     addLabel('Document: ', '"' + (state.documentTitle || 'Not available') + '"');
 
     const usedFilters = Coding.getUsedFilters();

@@ -24,7 +24,7 @@ var Coding = {
     { value: 'Values', label: 'Values', description: 'Captures values, attitudes, and beliefs reflected in the data.' },
     { value: 'Evaluation', label: 'Evaluation', description: 'Assigns evaluative judgments to the data.' },
     { value: 'Versus', label: 'Versus', description: 'Identifies dichotomies, conflicts, or binary oppositions in the data.' },
-    { value: 'Structural', label: 'Structural', description: 'Codes data according to its relevance to the research question.' },
+    { value: 'Structural', label: 'Structural', description: 'Codes data according to its relevance to a specific topic or question.' },
     { value: 'Holistic', label: 'Holistic', description: 'Applies a single code to a large unit of data. Captures the gist.' },
     { value: 'Provisional', label: 'Provisional', description: 'Starts from a pre-established list of codes derived from the literature.' }
   ],
